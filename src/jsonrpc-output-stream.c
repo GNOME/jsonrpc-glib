@@ -21,12 +21,16 @@
 #include <string.h>
 
 #include "jsonrpc-output-stream.h"
+#include "jsonrpc-version.h"
 
 G_DEFINE_TYPE (JsonrpcOutputStream, jsonrpc_output_stream, G_TYPE_DATA_OUTPUT_STREAM)
+
+static gboolean jsonrpc_output_stream_debug;
 
 static void
 jsonrpc_output_stream_class_init (JsonrpcOutputStreamClass *klass)
 {
+  jsonrpc_output_stream_debug = !!g_getenv ("JSONRPC_DEBUG");
 }
 
 static void
@@ -40,6 +44,7 @@ jsonrpc_output_stream_create_bytes (JsonrpcOutputStream  *self,
                                     GError              **error)
 {
   g_autofree gchar *str = NULL;
+  GString *message;
   gsize len;
 
   g_assert (JSONRPC_IS_OUTPUT_STREAM (self));
@@ -56,14 +61,23 @@ jsonrpc_output_stream_create_bytes (JsonrpcOutputStream  *self,
 
   str = json_to_string (node, FALSE);
   len = strlen (str);
-  /*
-   * So that we can have a somewhat readable stream when debugging,
-   * we add a trailing \n after the rpc. We use the trailing \0 and
-   * replace it with \n.
-   */
-  str[len++] = '\n';
 
-  return g_bytes_new_take (g_steal_pointer (&str), len);
+  if G_UNLIKELY (jsonrpc_output_stream_debug)
+    g_message (">>> %s", str);
+
+  /*
+   * Try to allocate our buffer in a single shot. Sadly we can't serialize
+   * JsonNode directly into a GString or we could remove the double
+   * allocation going on here.
+   */
+  message = g_string_sized_new (len + 32);
+
+  g_string_append_printf (message, "Content-Length: %"G_GSIZE_FORMAT"\r\n\r\n", len);
+  g_string_append_len (message, str, len);
+
+  len = message->len;
+
+  return g_bytes_new_take (g_string_free (message, FALSE), len);
 }
 
 JsonrpcOutputStream *
@@ -74,49 +88,37 @@ jsonrpc_output_stream_new (GOutputStream *base_stream)
                        NULL);
 }
 
-gboolean
-jsonrpc_output_stream_write_message (JsonrpcOutputStream  *self,
-                                     JsonNode             *node,
-                                     GCancellable         *cancellable,
-                                     GError              **error)
-{
-  g_autoptr(GBytes) bytes = NULL;
-  const guint8 *buffer;
-  gsize n_written = 0;
-  gsize len;
-
-  g_return_val_if_fail (JSONRPC_IS_OUTPUT_STREAM (self), FALSE);
-  g_return_val_if_fail (node != NULL, FALSE);
-  g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
-
-  if (NULL == (bytes = jsonrpc_output_stream_create_bytes (self, node, error)))
-    return FALSE;
-
-  buffer = g_bytes_get_data (bytes, &len);
-
-  if (!g_output_stream_write_all (G_OUTPUT_STREAM (self), buffer, len, &n_written, cancellable, error))
-    return FALSE;
-
-  if (n_written != len)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   G_IO_ERROR_CLOSED,
-                   "Failed to write all bytes to peer");
-      return FALSE;
-    }
-
-  return TRUE;
-}
-
 static void
-jsonrpc_output_stream_write_message_cb (GObject      *object,
-                                        GAsyncResult *result,
-                                        gpointer      user_data)
+jsonrpc_output_stream_flush_cb (GObject      *object,
+                                GAsyncResult *result,
+                                gpointer      user_data)
 {
   GOutputStream *stream = (GOutputStream *)object;
   g_autoptr(GError) error = NULL;
   g_autoptr(GTask) task = user_data;
+
+  g_assert (G_IS_OUTPUT_STREAM (stream));
+  g_assert (G_IS_ASYNC_RESULT (result));
+  g_assert (G_IS_TASK (task));
+
+  if (!g_output_stream_flush_finish (stream, result, &error))
+    {
+      g_task_return_error (task, g_steal_pointer (&error));
+      return;
+    }
+
+  g_task_return_boolean (task, TRUE);
+}
+
+static void
+jsonrpc_output_stream_write_message_async_cb (GObject      *object,
+                                              GAsyncResult *result,
+                                              gpointer      user_data)
+{
+  GOutputStream *stream = (GOutputStream *)object;
+  g_autoptr(GError) error = NULL;
+  g_autoptr(GTask) task = user_data;
+  GCancellable *cancellable;
   GBytes *bytes;
   gsize n_written;
 
@@ -141,7 +143,13 @@ jsonrpc_output_stream_write_message_cb (GObject      *object,
       return;
     }
 
-  g_task_return_boolean (task, TRUE);
+  cancellable = g_task_get_cancellable (task);
+
+  g_output_stream_flush_async (stream,
+                               G_PRIORITY_DEFAULT,
+                               cancellable,
+                               jsonrpc_output_stream_flush_cb,
+                               g_steal_pointer (&task));
 }
 
 void
@@ -179,7 +187,7 @@ jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
                                    len,
                                    G_PRIORITY_DEFAULT,
                                    cancellable,
-                                   jsonrpc_output_stream_write_message_cb,
+                                   jsonrpc_output_stream_write_message_async_cb,
                                    g_steal_pointer (&task));
 }
 
@@ -192,4 +200,53 @@ jsonrpc_output_stream_write_message_finish (JsonrpcOutputStream  *self,
   g_return_val_if_fail (G_IS_TASK (result), FALSE);
 
   return g_task_propagate_boolean (G_TASK (result), error);
+}
+
+static void
+jsonrpc_output_stream_write_message_sync_cb (GObject      *object,
+                                             GAsyncResult *result,
+                                             gpointer      user_data)
+{
+  JsonrpcOutputStream *self = (JsonrpcOutputStream *)object;
+  GTask *task = user_data;
+  g_autoptr(GError) error = NULL;
+
+  g_assert (JSONRPC_IS_OUTPUT_STREAM (self));
+  g_assert (G_IS_ASYNC_RESULT (result));
+  g_assert (G_IS_TASK (task));
+
+  if (!jsonrpc_output_stream_write_message_finish (self, result, &error))
+    g_task_return_error (task, error);
+  else
+    g_task_return_boolean (task, TRUE);
+}
+
+gboolean
+jsonrpc_output_stream_write_message (JsonrpcOutputStream  *self,
+                                     JsonNode             *node,
+                                     GCancellable         *cancellable,
+                                     GError              **error)
+{
+  g_autoptr(GTask) task = NULL;
+  g_autoptr(GMainContext) main_context = NULL;
+
+  g_return_val_if_fail (JSONRPC_IS_OUTPUT_STREAM (self), FALSE);
+  g_return_val_if_fail (node != NULL, FALSE);
+  g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
+
+  main_context = g_main_context_ref_thread_default ();
+
+  task = g_task_new (NULL, NULL, NULL, NULL);
+  g_task_set_source_tag (task, jsonrpc_output_stream_write_message);
+
+  jsonrpc_output_stream_write_message_async (self,
+                                             node,
+                                             cancellable,
+                                             jsonrpc_output_stream_write_message_sync_cb,
+                                             task);
+
+  while (!g_task_get_completed (task))
+    g_main_context_iteration (main_context, TRUE);
+
+  return g_task_propagate_boolean (task, error);
 }

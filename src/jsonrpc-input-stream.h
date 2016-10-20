@@ -53,7 +53,7 @@ void                jsonrpc_input_stream_read_message_async  (JsonrpcInputStream
                                                               gpointer              user_data);
 gboolean            jsonrpc_input_stream_read_message_finish (JsonrpcInputStream   *self,
                                                               GAsyncResult         *result,
-                                                              JsonNode            **object,
+                                                              JsonNode            **node,
                                                               GError              **error);
 
 G_END_DECLS

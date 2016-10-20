@@ -18,18 +18,52 @@
 
 #define G_LOG_DOMAIN "jsonrpc-input-stream"
 
+#include <errno.h>
+#include <string.h>
+
 #include "jsonrpc-input-stream.h"
 
-G_DEFINE_TYPE (JsonrpcInputStream, jsonrpc_input_stream, G_TYPE_DATA_INPUT_STREAM)
+typedef struct
+{
+  gssize content_length;
+  gchar *buffer;
+  gint priority;
+} ReadState;
+
+typedef struct
+{
+  gssize max_size_bytes;
+} JsonrpcInputStreamPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcInputStream, jsonrpc_input_stream, G_TYPE_DATA_INPUT_STREAM)
+
+static gboolean jsonrpc_input_stream_debug;
+
+static void
+read_state_free (gpointer data)
+{
+  ReadState *state = data;
+
+  g_free (state->buffer);
+  g_slice_free (ReadState, state);
+}
 
 static void
 jsonrpc_input_stream_class_init (JsonrpcInputStreamClass *klass)
 {
+  jsonrpc_input_stream_debug = !!g_getenv ("JSONRPC_DEBUG");
 }
 
 static void
 jsonrpc_input_stream_init (JsonrpcInputStream *self)
 {
+  JsonrpcInputStreamPrivate *priv = jsonrpc_input_stream_get_instance_private (self);
+
+  /* 100 MB */
+  priv->max_size_bytes = 100 * 1024 * 1024;
+
+  g_data_input_stream_set_newline_type (G_DATA_INPUT_STREAM (self),
+                                        G_DATA_STREAM_NEWLINE_TYPE_ANY);
 }
 
 JsonrpcInputStream *
@@ -40,73 +74,154 @@ jsonrpc_input_stream_new (GInputStream *base_stream)
                        NULL);
 }
 
-gboolean
-jsonrpc_input_stream_read_message (JsonrpcInputStream  *self,
-                                   GCancellable        *cancellable,
-                                   JsonNode           **node,
-                                   GError             **error)
-{
-  g_autoptr(JsonParser) parser = NULL;
-  JsonNode *root;
-
-  g_return_val_if_fail (JSONRPC_IS_INPUT_STREAM (self), FALSE);
-  g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
-
-  parser = json_parser_new ();
-
-  if (!json_parser_load_from_stream (parser, G_INPUT_STREAM (self), cancellable, error))
-    return FALSE;
-
-  root = json_parser_get_root (parser);
-
-  if (!JSON_NODE_HOLDS_OBJECT (root) || !JSON_NODE_HOLDS_ARRAY (root))
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   G_IO_ERROR_INVALID_DATA,
-                   "Implausable error from json parser");
-      return FALSE;
-    }
-
-  *node = json_node_ref (root);
-
-  return TRUE;
-}
-
 static void
-jsonrpc_input_stream_read_message_cb (GObject      *object,
-                                      GAsyncResult *result,
-                                      gpointer      user_data)
+jsonrpc_input_stream_read_body_cb (GObject      *object,
+                                   GAsyncResult *result,
+                                   gpointer      user_data)
 {
-  JsonParser *parser = (JsonParser *)object;
+  JsonrpcInputStream *self = (JsonrpcInputStream *)object;
   g_autoptr(GTask) task = user_data;
+  g_autoptr(JsonParser) parser = NULL;
   g_autoptr(GError) error = NULL;
+  ReadState *state;
   JsonNode *root;
+  gsize n_read;
 
-  g_assert (JSON_IS_PARSER (parser));
+  g_assert (JSONRPC_IS_INPUT_STREAM (self));
   g_assert (G_IS_TASK (task));
 
-  if (!json_parser_load_from_stream_finish (parser, result, &error))
+  state = g_task_get_task_data (task);
+
+  if (!g_input_stream_read_all_finish (G_INPUT_STREAM (self), result, &n_read, &error))
     {
       g_task_return_error (task, g_steal_pointer (&error));
       return;
     }
 
-  root = json_parser_get_root (parser);
-
-  if (root == NULL)
-    g_error ("Fooy");
-
-  if (!JSON_NODE_HOLDS_OBJECT (root) && !JSON_NODE_HOLDS_ARRAY (root))
+  if ((gssize)n_read != state->content_length)
     {
       g_task_return_new_error (task,
                                G_IO_ERROR,
                                G_IO_ERROR_INVALID_DATA,
-                               "Implausable error from json parser");
+                               "Failed to read %"G_GSSIZE_FORMAT" bytes",
+                               state->content_length);
       return;
     }
 
-  g_task_return_pointer (task, json_node_ref (root), (GDestroyNotify)json_node_unref);
+  state->buffer [state->content_length] = '\0';
+
+  if G_UNLIKELY (jsonrpc_input_stream_debug)
+    g_message ("<<< %s", state->buffer);
+
+  parser = json_parser_new_immutable ();
+
+  if (!json_parser_load_from_data (parser, state->buffer, state->content_length, &error))
+    {
+      g_task_return_error (task, error);
+      return;
+    }
+
+  if (NULL == (root = json_parser_get_root (parser)))
+    {
+      /*
+       * If we get back a NULL root node, that means that we got
+       * a short read (such as a closed stream).
+       */
+      g_task_return_new_error (task,
+                               G_IO_ERROR,
+                               G_IO_ERROR_CLOSED,
+                               "The peer did not send a reply");
+      return;
+    }
+
+  g_task_return_pointer (task, json_node_copy (root), (GDestroyNotify)json_node_unref);
+}
+
+static void
+jsonrpc_input_stream_read_headers_cb (GObject      *object,
+                                      GAsyncResult *result,
+                                      gpointer      user_data)
+{
+  JsonrpcInputStream *self = (JsonrpcInputStream *)object;
+  JsonrpcInputStreamPrivate *priv = jsonrpc_input_stream_get_instance_private (self);
+  g_autoptr(GTask) task = user_data;
+  g_autoptr(GError) error = NULL;
+  g_autofree gchar *line = NULL;
+  GCancellable *cancellable = NULL;
+  ReadState *state;
+  gsize length = 0;
+
+  g_assert (JSONRPC_IS_INPUT_STREAM (self));
+  g_assert (G_IS_TASK (task));
+
+  line = g_data_input_stream_read_line_finish_utf8 (G_DATA_INPUT_STREAM (self), result, &length, &error);
+
+  if (line == NULL && error != NULL)
+    {
+      g_task_return_error (task, g_steal_pointer (&error));
+      return;
+    }
+
+  state = g_task_get_task_data (task);
+  cancellable = g_task_get_cancellable (task);
+
+  if (line != NULL && strncasecmp ("Content-Length:", line, 15) == 0)
+    {
+      const gchar *lenptr = line + 16;
+      gint64 content_length;
+
+      content_length = g_ascii_strtoll (lenptr, NULL, 10);
+
+      if (((content_length == G_MININT64 || content_length == G_MAXINT64) && errno == ERANGE) ||
+          (content_length < 0) ||
+          (content_length > G_MAXSSIZE) ||
+          (content_length > priv->max_size_bytes))
+        {
+          g_task_return_new_error (task,
+                                   G_IO_ERROR,
+                                   G_IO_ERROR_INVALID_DATA,
+                                   "Invalid Content-Length received from peer");
+          return;
+        }
+
+      state->content_length = content_length;
+    }
+
+  /*
+   * If we are at the end of the headers, we can make progress towards
+   * parsing the JSON content. Otherwise we need to continue parsing
+   * the next header.
+   */
+
+  if (line != NULL && line[0] == '\0')
+    {
+      g_autoptr(JsonParser) parser = NULL;
+
+      if (state->content_length <= 0)
+        {
+          g_task_return_new_error (task,
+                                   G_IO_ERROR,
+                                   G_IO_ERROR_INVALID_DATA,
+                                   "Invalid or missing Content-Length header from peer");
+          return;
+        }
+
+      state->buffer = g_malloc (state->content_length + 1);
+      g_input_stream_read_all_async (G_INPUT_STREAM (self),
+                                     state->buffer,
+                                     state->content_length,
+                                     state->priority,
+                                     cancellable,
+                                     jsonrpc_input_stream_read_body_cb,
+                                     g_steal_pointer (&task));
+      return;
+    }
+
+  g_data_input_stream_read_line_async (G_DATA_INPUT_STREAM (self),
+                                       state->priority,
+                                       cancellable,
+                                       jsonrpc_input_stream_read_headers_cb,
+                                       g_steal_pointer (&task));
 }
 
 void
@@ -116,31 +231,99 @@ jsonrpc_input_stream_read_message_async (JsonrpcInputStream  *self,
                                          gpointer             user_data)
 {
   g_autoptr(GTask) task = NULL;
-  g_autoptr(JsonParser) parser = NULL;
+  ReadState *state;
 
   g_return_if_fail (JSONRPC_IS_INPUT_STREAM (self));
   g_return_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable));
 
+  state = g_slice_new0 (ReadState);
+  state->content_length = -1;
+  state->priority = G_PRIORITY_DEFAULT;
+
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_source_tag (task, jsonrpc_input_stream_read_message_async);
+  g_task_set_task_data (task, state, read_state_free);
 
-  parser = json_parser_new ();
-
-  json_parser_load_from_stream_async (parser,
-                                      G_INPUT_STREAM (self),
-                                      cancellable,
-                                      jsonrpc_input_stream_read_message_cb,
-                                      g_steal_pointer (&task));
+  g_data_input_stream_read_line_async (G_DATA_INPUT_STREAM (self),
+                                       state->priority,
+                                       cancellable,
+                                       jsonrpc_input_stream_read_headers_cb,
+                                       g_steal_pointer (&task));
 }
 
 gboolean
 jsonrpc_input_stream_read_message_finish (JsonrpcInputStream  *self,
                                           GAsyncResult        *result,
-                                          JsonNode           **object,
+                                          JsonNode           **node,
                                           GError             **error)
 {
+  g_autoptr(JsonNode) local_node = NULL;
+  gboolean ret;
+
   g_return_val_if_fail (JSONRPC_IS_INPUT_STREAM (self), FALSE);
   g_return_val_if_fail (G_IS_TASK (result), FALSE);
 
-  return g_task_propagate_boolean (G_TASK (result), error);
+  local_node = g_task_propagate_pointer (G_TASK (result), error);
+  ret = local_node != NULL;
+
+  if (node != NULL)
+    *node = g_steal_pointer (&local_node);
+
+  return ret;
 }
+
+static void
+jsonrpc_input_stream_read_message_sync_cb (GObject      *object,
+                                           GAsyncResult *result,
+                                           gpointer      user_data)
+{
+  JsonrpcInputStream *self = (JsonrpcInputStream *)object;
+  g_autoptr(GError) error = NULL;
+  g_autoptr(JsonNode) node = NULL;
+  GTask *task = user_data;
+
+  g_assert (JSONRPC_IS_INPUT_STREAM (self));
+  g_assert (G_IS_TASK (task));
+
+  if (!jsonrpc_input_stream_read_message_finish (self, result, &node, &error))
+    g_task_return_error (task, error);
+  else
+    g_task_return_pointer (task, g_steal_pointer (&node), (GDestroyNotify)json_node_unref);
+}
+
+gboolean
+jsonrpc_input_stream_read_message (JsonrpcInputStream  *self,
+                                   GCancellable        *cancellable,
+                                   JsonNode           **node,
+                                   GError             **error)
+{
+  g_autoptr(GMainContext) main_context = NULL;
+  g_autoptr(JsonNode) local_node = NULL;
+  g_autoptr(GTask) task = NULL;
+  gboolean ret;
+
+  g_return_val_if_fail (JSONRPC_IS_INPUT_STREAM (self), FALSE);
+  g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
+
+  main_context = g_main_context_ref_thread_default ();
+
+  task = g_task_new (NULL, NULL, NULL, NULL);
+  g_task_set_source_tag (task, jsonrpc_input_stream_read_message);
+
+  jsonrpc_input_stream_read_message_async (self,
+                                           cancellable,
+                                           jsonrpc_input_stream_read_message_sync_cb,
+                                           task);
+
+  while (!g_task_get_completed (task))
+    g_main_context_iteration (main_context, TRUE);
+
+  local_node = g_task_propagate_pointer (task, error);
+  ret = local_node != NULL;
+
+  if (node != NULL)
+    *node = g_steal_pointer (&local_node);
+
+  return ret;
+}
+

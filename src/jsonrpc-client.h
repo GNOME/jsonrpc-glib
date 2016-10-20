@@ -49,6 +49,16 @@ struct _JsonrpcClientClass
 
 GQuark         jsonrpc_client_error_quark         (void);
 JsonrpcClient *jsonrpc_client_new                 (GIOStream            *io_stream);
+gboolean       jsonrpc_client_close               (JsonrpcClient        *self,
+                                                   GCancellable         *cancellable,
+                                                   GError              **error);
+void           jsonrpc_client_close_async         (JsonrpcClient        *self,
+                                                   GCancellable         *cancellable,
+                                                   GAsyncReadyCallback   callback,
+                                                   gpointer              user_data);
+gboolean       jsonrpc_client_close_finish        (JsonrpcClient        *self,
+                                                   GAsyncResult         *result,
+                                                   GError              **error);
 gboolean       jsonrpc_client_call                (JsonrpcClient        *self,
                                                    const gchar          *method,
                                                    JsonNode             *params,
