@@ -121,7 +121,7 @@ main (gint   argc,
     "capabilities", "{", "}"
   );
 
-  jsonrpc_client_call_async (client, "initialize", params, NULL, call_cb, NULL);
+  jsonrpc_client_call_async (client, "initialize", g_steal_pointer (&params), NULL, call_cb, NULL);
 
   g_timeout_add_seconds (5, timeout_cb, NULL);
 
