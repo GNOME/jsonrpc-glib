@@ -7,6 +7,7 @@ nobase_headers_DATA = \
 	jsonrpc-input-stream.h \
 	jsonrpc-output-stream.h \
 	jsonrpc-version.h \
+	jcon.h \
 	$(NULL)
 
 libjsonrpc_glib_@API_VERSION@_la_SOURCES = \
@@ -15,7 +16,6 @@ libjsonrpc_glib_@API_VERSION@_la_SOURCES = \
 	jsonrpc-input-stream.c \
 	jsonrpc-output-stream.c \
 	jcon.c \
-	jcon.h \
 	$(NULL)
 
 libjsonrpc_glib_@API_VERSION@_la_CFLAGS = \
