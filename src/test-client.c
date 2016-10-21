@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "jcon.h"
 #include "jsonrpc-client.h"
 
 static JsonrpcClient *client;
@@ -70,9 +71,8 @@ main (gint   argc,
 {
   g_autoptr(GIOStream) io_stream = NULL;
   g_autoptr(GError) error = NULL;
-  JsonNode *params_node;
-  JsonObject *params;
   g_autoptr(GSubprocess) subprocess = NULL;
+  g_autoptr(JsonNode) params = NULL;
   GInputStream *stdout_pipe;
   GOutputStream *stdin_pipe;
 
@@ -115,15 +115,13 @@ main (gint   argc,
                                              "sample_project",
                                              NULL);
 
-  params = json_object_new ();
-  json_object_set_int_member (params, "processId", getpid ());
-  json_object_set_string_member (params, "rootPath", path);
-  json_object_set_object_member (params, "capabilities", json_object_new ());
+  params = JCON_NEW (
+    "processId", JCON_INT (getpid ()),
+    "rootPath", JCON_STRING (path),
+    "capabilities", "{", "}"
+  );
 
-  params_node = json_node_new (JSON_NODE_OBJECT);
-  json_node_set_object (params_node, params);
-
-  jsonrpc_client_call_async (client, "initialize", params_node, NULL, call_cb, NULL);
+  jsonrpc_client_call_async (client, "initialize", params, NULL, call_cb, NULL);
 
   g_timeout_add_seconds (5, timeout_cb, NULL);
 

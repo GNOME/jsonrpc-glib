@@ -14,6 +14,8 @@ libjsonrpc_glib_@API_VERSION@_la_SOURCES = \
 	jsonrpc-client.c \
 	jsonrpc-input-stream.c \
 	jsonrpc-output-stream.c \
+	jcon.c \
+	jcon.h \
 	$(NULL)
 
 libjsonrpc_glib_@API_VERSION@_la_CFLAGS = \
