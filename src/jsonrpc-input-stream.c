@@ -195,8 +195,6 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
 
   if (line != NULL && line[0] == '\0')
     {
-      g_autoptr(JsonParser) parser = NULL;
-
       if (state->content_length <= 0)
         {
           g_task_return_new_error (task,
