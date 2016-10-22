@@ -1,4 +1,7 @@
 lib_LTLIBRARIES = libjsonrpc-glib-@API_VERSION@.la
+noinst_PROGRAMS =
+TESTS =
+LOG_COMPILER = $(top_srcdir)/build-aux/tap-test
 
 headersdir = $(includedir)/jsonrpc-glib-@API_VERSION@
 nobase_headers_DATA = \
@@ -33,7 +36,7 @@ libjsonrpc_glib_@API_VERSION@_la_LDFLAGS = \
 	$(NULL)
 
 # Tests against the Rust Language Server "rls" tool.
-noinst_PROGRAMS = test-client
+noinst_PROGRAMS += test-client
 test_client_CFLAGS = $(JSONRPC_CFLAGS)
 test_client_LDADD = \
 	$(JSONRPC_CFLAGS) \
