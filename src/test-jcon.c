@@ -78,6 +78,25 @@ test_extract_array (void)
 
 }
 
+static void
+test_extract_object (void)
+{
+  g_autoptr(JsonNode) node = NULL;
+  JsonObject *object = NULL;
+  gboolean r;
+
+  node = JCON_NEW ("foo", "{", "bar", "[", JCON_INT (1), "two", JCON_INT (3), "]", "}");
+  g_assert (node != NULL);
+
+  r = JCON_EXTRACT (node, "foo", JCONE_OBJECT (object));
+  g_assert (object != NULL);
+  g_assert (json_object_has_member (object, "bar"));
+  g_assert (JSON_NODE_HOLDS_ARRAY (json_object_get_member (object, "bar")));
+  g_assert (JSON_NODE_HOLDS_VALUE (json_array_get_element (json_object_get_array_member (object, "bar"), 1)));
+  g_assert_cmpstr ("two", ==, json_node_get_string (json_array_get_element (json_object_get_array_member (object, "bar"), 1)));
+
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -86,5 +105,6 @@ main (gint argc,
   g_test_add_func ("/Jcon/basic", test_basic);
   g_test_add_func ("/Jcon/deep_array", test_deep_array);
   g_test_add_func ("/Jcon/extract_array", test_extract_array);
+  g_test_add_func ("/Jcon/extract_object", test_extract_object);
   return g_test_run ();
 }
