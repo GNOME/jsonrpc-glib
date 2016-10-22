@@ -35,6 +35,14 @@ libjsonrpc_glib_@API_VERSION@_la_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(NULL)
 
+noinst_PROGRAMS += test-jcon
+TESTS += test-jcon
+test_jcon_CFLAGS = $(JSONRPC_CFLAGS)
+test_jcon_LDADD = \
+	$(JSONRPC_CFLAGS) \
+	libjsonrpc-glib-@API_VERSION@.la \
+	$(NULL)
+
 # Tests against the Rust Language Server "rls" tool.
 noinst_PROGRAMS += test-client
 test_client_CFLAGS = $(JSONRPC_CFLAGS)

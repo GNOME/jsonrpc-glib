@@ -1,3 +1,21 @@
+/* jcon.h
+ *
+ * Copyright (C) 2016 Christian Hergert <chergert@redhat.com>
+ *
+ * This file is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This file is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /* Copyright 2009-2013 MongoDB, Inc.
  * Copyright      2016 Christian Hergert <chergert@redhat.com>
  *
@@ -72,18 +90,19 @@ JCON_ENSURE_DECLARE (boolean_ptr, gboolean *)
 
 typedef enum
 {
-   JCON_TYPE_STRING,
-   JCON_TYPE_DOUBLE,
-   JCON_TYPE_OBJECT,
-   JCON_TYPE_ARRAY,
-   JCON_TYPE_BOOLEAN,
-   JCON_TYPE_NULL,
-   JCON_TYPE_INT,
-   JCON_TYPE_ARRAY_START,
-   JCON_TYPE_ARRAY_END,
-   JCON_TYPE_OBJECT_START,
-   JCON_TYPE_OBJECT_END,
-   JCON_TYPE_END,
+  JCON_TYPE_STRING,
+  JCON_TYPE_DOUBLE,
+  JCON_TYPE_OBJECT,
+  JCON_TYPE_ARRAY,
+  JCON_TYPE_BOOLEAN,
+  JCON_TYPE_NULL,
+  JCON_TYPE_INT,
+  JCON_TYPE_ARRAY_START,
+  JCON_TYPE_ARRAY_END,
+  JCON_TYPE_OBJECT_START,
+  JCON_TYPE_OBJECT_END,
+  JCON_TYPE_END,
+  JCON_TYPE_RAW,
 } JconType;
 
 #define JCON_MAGIC jcon_magic()
@@ -95,7 +114,6 @@ const char *jcone_magic (void) G_GNUC_CONST;
 #define JCON_NEW(...) jcon_new (NULL, __VA_ARGS__, NULL)
 JsonNode *jcon_new (gpointer  unused, ...) G_GNUC_NULL_TERMINATED;
 
-/* TODO: Finish extraction */
 #define JCON_EXTRACT(_node, ...) jcon_extract ((_node), __VA_ARGS__, NULL)
 gboolean jcon_extract (JsonNode *node, ...) G_GNUC_NULL_TERMINATED;
 
