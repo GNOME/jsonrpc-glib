@@ -53,6 +53,28 @@ test_deep_array (void)
   r = JCON_EXTRACT (node, "foo", "[","[","[","[","[","[","[","[","[","{", "foo", JCONE_STRING (xyz), "}", "]","]","]","]","]","]","]","]","]");
   g_assert_cmpstr (xyz, ==, "xyz");
   g_assert_cmpint (r, ==, 1);
+}
+
+static void
+test_extract_array (void)
+{
+  g_autoptr(JsonNode) node = NULL;
+  JsonArray *ar123 = NULL;
+  gboolean r;
+
+  node = JCON_NEW ("foo", "[", JCON_INT (1), JCON_INT (2), JCON_INT (3), "]");
+  g_assert (node != NULL);
+
+  r = JCON_EXTRACT (node, "foo", JCONE_ARRAY (ar123));
+  g_assert (ar123 != NULL);
+  g_assert_cmpint (r, ==, 1);
+  g_assert_cmpint (3, ==, json_array_get_length (ar123));
+  g_assert (JSON_NODE_HOLDS_VALUE (json_array_get_element (ar123, 0)));
+  g_assert (JSON_NODE_HOLDS_VALUE (json_array_get_element (ar123, 1)));
+  g_assert (JSON_NODE_HOLDS_VALUE (json_array_get_element (ar123, 2)));
+  g_assert_cmpint (json_node_get_int (json_array_get_element (ar123, 0)), ==, 1);
+  g_assert_cmpint (json_node_get_int (json_array_get_element (ar123, 1)), ==, 2);
+  g_assert_cmpint (json_node_get_int (json_array_get_element (ar123, 2)), ==, 3);
 
 }
 
@@ -63,5 +85,6 @@ main (gint argc,
   g_test_init (&argc, &argv, NULL);
   g_test_add_func ("/Jcon/basic", test_basic);
   g_test_add_func ("/Jcon/deep_array", test_deep_array);
+  g_test_add_func ("/Jcon/extract_array", test_extract_array);
   return g_test_run ();
 }
