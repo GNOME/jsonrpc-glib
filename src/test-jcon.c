@@ -112,6 +112,22 @@ test_extract_node (void)
   g_assert_cmpint (r, ==, TRUE);
 }
 
+static void
+test_paren (void)
+{
+  g_autoptr(JsonNode) node = NULL;
+  const gchar *paren = "{";
+  const gchar *str = NULL;
+  gboolean r;
+
+  node = JCON_NEW ("foo", "{", "bar", "[", JCON_STRING (paren), "]", "}");
+  g_assert (node != NULL);
+
+  r = JCON_EXTRACT (node, "foo", "{", "bar", "[", JCONE_STRING (str), "]", "}");
+  g_assert_cmpstr (str, ==, "{");
+  g_assert_cmpint (r, ==, TRUE);
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -122,5 +138,6 @@ main (gint argc,
   g_test_add_func ("/Jcon/extract_array", test_extract_array);
   g_test_add_func ("/Jcon/extract_object", test_extract_object);
   g_test_add_func ("/Jcon/extract_node", test_extract_node);
+  g_test_add_func ("/Jcon/paren", test_paren);
   return g_test_run ();
 }
