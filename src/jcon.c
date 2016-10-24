@@ -523,7 +523,7 @@ jcon_extract_from_node (JsonNode    *node,
 static JsonNode *
 get_stack_node (JsonNode    *node,
                 const gchar *key,
-                guint        index)
+                guint        idx)
 {
   g_assert (node != NULL);
 
@@ -532,9 +532,9 @@ get_stack_node (JsonNode    *node,
       JsonArray *array = json_node_get_array (node);
       if (array == NULL)
         return NULL;
-      if (index >= json_array_get_length (array))
+      if (idx >= json_array_get_length (array))
         return NULL;
-      return json_array_get_element (array, index);
+      return json_array_get_element (array, idx);
     }
 
   if (JSON_NODE_HOLDS_OBJECT (node))
