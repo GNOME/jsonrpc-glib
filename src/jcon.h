@@ -32,8 +32,8 @@
  * limitations under the License.
  */
 
-#ifndef JCON_H
-#define JCON_H
+#ifndef JSONRPC_JCON_H
+#define JSONRPC_JCON_H
 
 #include <json-glib/json-glib.h>
 
@@ -127,4 +127,4 @@ gboolean jcon_extract (JsonNode *node, ...) G_GNUC_NULL_TERMINATED;
 
 G_END_DECLS
 
-#endif
+#endif /* JSONRPC_JCON_H */
