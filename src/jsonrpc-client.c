@@ -232,7 +232,7 @@ unwrap_jsonrpc_error (JsonNode  *node,
       if (message == NULL || *message == '\0')
         message = "Unknown error occurred";
 
-      g_set_error_literal (error, JSONRPC_CLIENT_ERROR, code, message);
+      g_set_error (error, JSONRPC_CLIENT_ERROR, code, "%s", message);
 
       return TRUE;
     }
@@ -596,6 +596,11 @@ jsonrpc_client_call_read_cb (GObject      *object,
       jsonrpc_client_panic (self, error);
       return;
     }
+
+  {
+    g_autofree gchar *str = json_to_string (node, FALSE);
+    g_warning ("Unhandled message: %s", str);
+  }
 
 begin_next_read:
   if (priv->input_stream != NULL && priv->in_shutdown == FALSE)
