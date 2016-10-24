@@ -226,8 +226,8 @@ unwrap_jsonrpc_error (JsonNode  *node,
       const gchar *message;
       gint code;
 
-      message = json_object_get_string_member (object, "message");
-      code = json_object_get_int_member (object, "code");
+      message = json_object_get_string_member (err_obj, "message");
+      code = json_object_get_int_member (err_obj, "code");
 
       if (message == NULL || *message == '\0')
         message = "Unknown error occurred";
