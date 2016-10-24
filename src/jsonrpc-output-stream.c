@@ -161,8 +161,8 @@ jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
 {
   g_autoptr(GBytes) bytes = NULL;
   g_autoptr(GTask) task = NULL;
+  g_autoptr(GError) error = NULL;
   const guint8 *data;
-  GError *error = NULL;
   gsize len;
 
   g_return_if_fail (JSONRPC_IS_OUTPUT_STREAM (self));
@@ -174,7 +174,7 @@ jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
 
   if (NULL == (bytes = jsonrpc_output_stream_create_bytes (self, node, &error)))
     {
-      g_task_return_error (task, error);
+      g_task_return_error (task, g_steal_pointer (&error));
       return;
     }
 
@@ -216,7 +216,7 @@ jsonrpc_output_stream_write_message_sync_cb (GObject      *object,
   g_assert (G_IS_TASK (task));
 
   if (!jsonrpc_output_stream_write_message_finish (self, result, &error))
-    g_task_return_error (task, error);
+    g_task_return_error (task, g_steal_pointer (&error));
   else
     g_task_return_boolean (task, TRUE);
 }
