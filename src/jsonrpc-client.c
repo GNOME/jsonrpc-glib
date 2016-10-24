@@ -826,6 +826,7 @@ jsonrpc_client_notification_write_cb (GObject      *object,
   g_autoptr(GError) error = NULL;
 
   g_assert (JSONRPC_IS_OUTPUT_STREAM (stream));
+  g_assert (G_IS_ASYNC_RESULT (result));
   g_assert (G_IS_TASK (task));
 
   if (!jsonrpc_output_stream_write_message_finish (stream, result, &error))
@@ -911,6 +912,9 @@ jsonrpc_client_notification_async (JsonrpcClient       *self,
   g_return_if_fail (JSONRPC_IS_CLIENT (self));
   g_return_if_fail (method != NULL);
   g_return_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable));
+
+  task = g_task_new (self, cancellable, callback, user_data);
+  g_task_set_source_tag (task, jsonrpc_client_notification_async);
 
   if (params == NULL)
     params = json_node_new (JSON_NODE_NULL);
