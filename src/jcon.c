@@ -46,6 +46,7 @@ typedef union
   gdouble      v_double;
   JsonObject  *v_object;
   JsonArray   *v_array;
+  JsonNode    *v_node;
   gboolean     v_boolean;
   gint         v_int;
 } JconAppend;
@@ -57,6 +58,7 @@ typedef union
   gdouble      *v_double;
   JsonObject  **v_object;
   JsonArray   **v_array;
+  JsonNode    **v_node;
   gboolean     *v_boolean;
   gint         *v_int;
 } JconExtract;
@@ -103,6 +105,9 @@ jcon_append_to_node (JconType    type,
       node = json_node_new (JSON_NODE_VALUE);
       json_node_set_int (node, val->v_int);
       return node;
+
+    case JCON_TYPE_NODE:
+      return json_node_copy (val->v_node);
 
     case JCON_TYPE_ARRAY:
       node = json_node_new (JSON_NODE_ARRAY);
@@ -173,6 +178,10 @@ jcon_append_tokenize (va_list    *ap,
 
         case JCON_TYPE_DOUBLE:
           u->v_double = va_arg (*ap, double);
+          break;
+
+        case JCON_TYPE_NODE:
+          u->v_node = va_arg (*ap, JsonNode *);
           break;
 
         case JCON_TYPE_OBJECT:
@@ -378,6 +387,10 @@ jcon_extract_tokenize (va_list     *args,
           val->v_double = va_arg (*args, gdouble *);
           return TRUE;
 
+        case JCON_TYPE_NODE:
+          val->v_node = va_arg (*args, JsonNode **);
+          return TRUE;
+
         case JCON_TYPE_OBJECT:
           val->v_object = va_arg (*args, JsonObject **);
           return TRUE;
@@ -458,6 +471,10 @@ jcon_extract_from_node (JsonNode    *node,
         *val->v_double = json_node_get_double (node);
       else
         *val->v_double = 0.0;
+      break;
+
+    case JCON_TYPE_NODE:
+      *val->v_node = node;
       break;
 
     case JCON_TYPE_OBJECT:

@@ -52,13 +52,14 @@ JCON_ENSURE_DECLARE (const_char_ptr, const char *)
 JCON_ENSURE_DECLARE (const_char_ptr_ptr, const char **)
 JCON_ENSURE_DECLARE (double, double)
 JCON_ENSURE_DECLARE (double_ptr, double *)
-JCON_ENSURE_DECLARE (node_ptr, JsonNode *)
 JCON_ENSURE_DECLARE (array_ptr, JsonArray *)
 JCON_ENSURE_DECLARE (array_ptr_ptr, JsonArray **)
 JCON_ENSURE_DECLARE (object_ptr, JsonObject *)
 JCON_ENSURE_DECLARE (object_ptr_ptr, JsonObject **)
+JCON_ENSURE_DECLARE (node_ptr, JsonNode *)
+JCON_ENSURE_DECLARE (node_ptr_ptr, JsonNode **)
 JCON_ENSURE_DECLARE (int, gint)
-JCON_ENSURE_DECLARE (int_ptr, gint*)
+JCON_ENSURE_DECLARE (int_ptr, gint *)
 JCON_ENSURE_DECLARE (boolean, gboolean)
 JCON_ENSURE_DECLARE (boolean_ptr, gboolean *)
 
@@ -70,6 +71,8 @@ JCON_ENSURE_DECLARE (boolean_ptr, gboolean *)
   JCON_MAGIC, JCON_TYPE_OBJECT, JCON_ENSURE (object_ptr, (_val))
 #define JCON_ARRAY(_val) \
   JCON_MAGIC, JCON_TYPE_ARRAY, JCON_ENSURE (array_ptr, (_val))
+#define JCON_NODE(_val) \
+  JCON_MAGIC, JCON_TYPE_NODE, JCON_ENSURE (node_ptr, (_val))
 #define JCON_BOOLEAN(_val) \
   JCON_MAGIC, JCON_TYPE_BOOLEAN, JCON_ENSURE (boolean, (_val))
 #define JCON_NULL JCON_MAGIC, JCON_TYPE_NULL
@@ -84,6 +87,8 @@ JCON_ENSURE_DECLARE (boolean_ptr, gboolean *)
   JCON_ENSURE_STORAGE (object_ptr_ptr, (_val))
 #define JCONE_ARRAY(_val) JCONE_MAGIC, JCON_TYPE_ARRAY, \
   JCON_ENSURE_STORAGE (array_ptr_ptr, (_val))
+#define JCONE_NODE(_val) JCONE_MAGIC, JCON_TYPE_NODE, \
+  JCON_ENSURE_STORAGE (node_ptr_ptr, (_val))
 #define JCONE_BOOLEAN(_val) JCONE_MAGIC, JCON_TYPE_BOOLEAN, \
   JCON_ENSURE_STORAGE (bool_ptr, (_val))
 #define JCONE_NULL JCONE_MAGIC, JCON_TYPE_NULL
@@ -96,6 +101,7 @@ typedef enum
   JCON_TYPE_DOUBLE,
   JCON_TYPE_OBJECT,
   JCON_TYPE_ARRAY,
+  JCON_TYPE_NODE,
   JCON_TYPE_BOOLEAN,
   JCON_TYPE_NULL,
   JCON_TYPE_INT,
