@@ -232,7 +232,7 @@ unwrap_jsonrpc_error (JsonNode  *node,
       if (message == NULL || *message == '\0')
         message = "Unknown error occurred";
 
-      g_set_error (error, JSONRPC_CLIENT_ERROR, code, "%s", message);
+      g_set_error_literal (error, JSONRPC_CLIENT_ERROR, code, message);
 
       return TRUE;
     }
