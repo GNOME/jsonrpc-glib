@@ -156,9 +156,15 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
 
   line = g_data_input_stream_read_line_finish_utf8 (G_DATA_INPUT_STREAM (self), result, &length, &error);
 
-  if (line == NULL && error != NULL)
+  if (line == NULL)
     {
-      g_task_return_error (task, g_steal_pointer (&error));
+      if (error != NULL)
+        g_task_return_error (task, g_steal_pointer (&error));
+      else
+        g_task_return_new_error (task,
+                                 G_IO_ERROR,
+                                 G_IO_ERROR_CLOSED,
+                                 "The peer has closed the stream");
       return;
     }
 
