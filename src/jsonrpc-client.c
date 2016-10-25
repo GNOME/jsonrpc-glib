@@ -115,6 +115,12 @@ typedef struct
    * will check for this and discontinue further asynchronous reads.
    */
   guint in_shutdown : 1;
+
+  /*
+   * If we have panic'd, this will be set to TRUE so that we can short
+   * circuit on future operations sooner.
+   */
+  guint failed : 1;
 } JsonrpcClientPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcClient, jsonrpc_client, G_TYPE_OBJECT)
@@ -258,6 +264,8 @@ jsonrpc_client_panic (JsonrpcClient *self,
   g_assert (JSONRPC_IS_CLIENT (self));
   g_assert (error != NULL);
 
+  priv->failed = TRUE;
+
   g_warning ("%s", error->message);
 
   jsonrpc_client_close (self, NULL, NULL);
@@ -287,23 +295,23 @@ jsonrpc_client_panic (JsonrpcClient *self,
  *
  * Checks to see if the client is in a position to make requests.
  *
- * Returns: true if read, otherwise false and error is set.
+ * Returns: %TRUE if the client is ready for RPCs; otherwise %FALSE
+ *   and @error is set.
  */
 static gboolean
-jsonrpc_client_check_ready (JsonrpcClient *self,
-                            GTask         *task)
+jsonrpc_client_check_ready (JsonrpcClient  *self,
+                            GError        **error)
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
 
   g_assert (JSONRPC_IS_CLIENT (self));
-  g_assert (G_IS_TASK (task));
 
-  if (priv->in_shutdown || priv->output_stream == NULL || priv->input_stream == NULL)
+  if (priv->failed || priv->in_shutdown || priv->output_stream == NULL || priv->input_stream == NULL)
     {
-      g_task_return_new_error (task,
-                               G_IO_ERROR,
-                               G_IO_ERROR_NOT_CONNECTED,
-                               "No stream available to deliver invocation");
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_NOT_CONNECTED,
+                   "No stream available to deliver invocation");
       return FALSE;
     }
 
@@ -718,6 +726,7 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
   g_autoptr(JsonObject) object = NULL;
   g_autoptr(JsonNode) node = NULL;
   g_autoptr(GTask) task = NULL;
+  g_autoptr(GError) error = NULL;
   gint id;
 
   g_return_if_fail (JSONRPC_IS_CLIENT (self));
@@ -727,8 +736,11 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_source_tag (task, jsonrpc_client_call_async);
 
-  if (!jsonrpc_client_check_ready (self, task))
-    return;
+  if (!jsonrpc_client_check_ready (self, &error))
+    {
+      g_task_return_error (task, g_steal_pointer (&error));
+      return;
+    }
 
   g_signal_connect (task,
                     "notify::completed",
@@ -870,6 +882,9 @@ jsonrpc_client_notification (JsonrpcClient  *self,
   g_return_val_if_fail (method != NULL, FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
 
+  if (!jsonrpc_client_check_ready (self, error))
+    return FALSE;
+
   if (params == NULL)
     params = json_node_new (JSON_NODE_NULL);
 
@@ -913,6 +928,7 @@ jsonrpc_client_notification_async (JsonrpcClient       *self,
   g_autoptr(JsonObject) object = NULL;
   g_autoptr(JsonNode) node = NULL;
   g_autoptr(GTask) task = NULL;
+  g_autoptr(GError) error = NULL;
 
   g_return_if_fail (JSONRPC_IS_CLIENT (self));
   g_return_if_fail (method != NULL);
@@ -920,6 +936,12 @@ jsonrpc_client_notification_async (JsonrpcClient       *self,
 
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_source_tag (task, jsonrpc_client_notification_async);
+
+  if (!jsonrpc_client_check_ready (self, &error))
+    {
+      g_task_return_error (task, g_steal_pointer (&error));
+      return;
+    }
 
   if (params == NULL)
     params = json_node_new (JSON_NODE_NULL);
@@ -990,6 +1012,9 @@ jsonrpc_client_close (JsonrpcClient  *self,
 
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
+
+  if (!jsonrpc_client_check_ready (self, error))
+    return FALSE;
 
   priv->in_shutdown = TRUE;
 
