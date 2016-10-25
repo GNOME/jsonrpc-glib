@@ -171,7 +171,7 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
   state = g_task_get_task_data (task);
   cancellable = g_task_get_cancellable (task);
 
-  if (line != NULL && strncasecmp ("Content-Length: ", line, 16) == 0)
+  if (strncasecmp ("Content-Length: ", line, 16) == 0)
     {
       const gchar *lenptr = line + 16;
       gint64 content_length;
@@ -199,7 +199,7 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
    * the next header.
    */
 
-  if (line != NULL && line[0] == '\0')
+  if (line[0] == '\0')
     {
       if (state->content_length <= 0)
         {
