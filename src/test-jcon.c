@@ -128,6 +128,27 @@ test_paren (void)
   g_assert_cmpint (r, ==, TRUE);
 }
 
+static void
+test_array_toplevel (void)
+{
+  g_autoptr(JsonNode) node = NULL;
+  JsonNode *ar = NULL;
+  const gchar *a = NULL;
+  const gchar *b = NULL;
+  gboolean r;
+
+  node = JCON_NEW ("foo", "[", "a", "b", "c", "d", "e", "]");
+  g_assert (node != NULL);
+
+  r = JCON_EXTRACT (node, "foo", JCONE_NODE (ar));
+  g_assert (ar);
+  g_assert_cmpint (r, ==, TRUE);
+
+  r = JCON_EXTRACT (ar, JCONE_STRING (a), JCONE_STRING (b));
+  g_assert_cmpstr (a, ==, "a");
+  g_assert_cmpint (r, ==, TRUE);
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -139,5 +160,6 @@ main (gint argc,
   g_test_add_func ("/Jcon/extract_object", test_extract_object);
   g_test_add_func ("/Jcon/extract_node", test_extract_node);
   g_test_add_func ("/Jcon/paren", test_paren);
+  g_test_add_func ("/Jcon/array_toplevel", test_array_toplevel);
   return g_test_run ();
 }

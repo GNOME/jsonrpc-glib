@@ -607,6 +607,10 @@ jcon_extract_va_list (JsonNode *node,
       if (!jcon_extract_tokenize (args, &val, &type))
         return FALSE;
 
+      /* We can have an END here if the root was an array */
+      if (sp == 0 && type == JCON_TYPE_END && JSON_NODE_HOLDS_ARRAY (node))
+        return TRUE;
+
       if (JSON_NODE_HOLDS_OBJECT (node))
         {
           if (type == JCON_TYPE_OBJECT_END || type == JCON_TYPE_ARRAY_END || type == JCON_TYPE_END)
