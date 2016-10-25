@@ -59,8 +59,8 @@ jsonrpc_input_stream_init (JsonrpcInputStream *self)
 {
   JsonrpcInputStreamPrivate *priv = jsonrpc_input_stream_get_instance_private (self);
 
-  /* 100 MB */
-  priv->max_size_bytes = 100 * 1024 * 1024;
+  /* 16 MB */
+  priv->max_size_bytes = 16 * 1024 * 1024;
 
   g_data_input_stream_set_newline_type (G_DATA_INPUT_STREAM (self),
                                         G_DATA_STREAM_NEWLINE_TYPE_ANY);
