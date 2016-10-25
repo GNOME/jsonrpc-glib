@@ -39,7 +39,7 @@ noinst_PROGRAMS += test-jcon
 TESTS += test-jcon
 test_jcon_CFLAGS = $(JSONRPC_CFLAGS)
 test_jcon_LDADD = \
-	$(JSONRPC_CFLAGS) \
+	$(JSONRPC_LIBS) \
 	libjsonrpc-glib-@API_VERSION@.la \
 	$(NULL)
 
@@ -47,7 +47,7 @@ test_jcon_LDADD = \
 noinst_PROGRAMS += test-client
 test_client_CFLAGS = $(JSONRPC_CFLAGS)
 test_client_LDADD = \
-	$(JSONRPC_CFLAGS) \
+	$(JSONRPC_LIBS) \
 	libjsonrpc-glib-@API_VERSION@.la \
 	$(NULL)
 
