@@ -23,19 +23,47 @@
 #include "jsonrpc-output-stream.h"
 #include "jsonrpc-version.h"
 
-G_DEFINE_TYPE (JsonrpcOutputStream, jsonrpc_output_stream, G_TYPE_DATA_OUTPUT_STREAM)
+typedef struct
+{
+  GQueue queue;
+} JsonrpcOutputStreamPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcOutputStream, jsonrpc_output_stream, G_TYPE_DATA_OUTPUT_STREAM)
+
+static void jsonrpc_output_stream_write_message_async_cb (GObject      *object,
+                                                          GAsyncResult *result,
+                                                          gpointer      user_data);
 
 static gboolean jsonrpc_output_stream_debug;
 
 static void
+jsonrpc_output_stream_finalize (GObject *object)
+{
+  JsonrpcOutputStream *self = (JsonrpcOutputStream *)object;
+  JsonrpcOutputStreamPrivate *priv = jsonrpc_output_stream_get_instance_private (self);
+
+  g_queue_foreach (&priv->queue, (GFunc)g_object_unref, NULL);
+  g_queue_clear (&priv->queue);
+
+  G_OBJECT_CLASS (jsonrpc_output_stream_parent_class)->finalize (object);
+}
+
+static void
 jsonrpc_output_stream_class_init (JsonrpcOutputStreamClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = jsonrpc_output_stream_finalize;
+
   jsonrpc_output_stream_debug = !!g_getenv ("JSONRPC_DEBUG");
 }
 
 static void
 jsonrpc_output_stream_init (JsonrpcOutputStream *self)
 {
+  JsonrpcOutputStreamPrivate *priv = jsonrpc_output_stream_get_instance_private (self);
+
+  g_queue_init (&priv->queue);
 }
 
 static GBytes *
@@ -89,25 +117,60 @@ jsonrpc_output_stream_new (GOutputStream *base_stream)
 }
 
 static void
-jsonrpc_output_stream_flush_cb (GObject      *object,
-                                GAsyncResult *result,
-                                gpointer      user_data)
+jsonrpc_output_stream_fail_pending (JsonrpcOutputStream *self)
 {
-  GOutputStream *stream = (GOutputStream *)object;
-  g_autoptr(GError) error = NULL;
-  g_autoptr(GTask) task = user_data;
+  JsonrpcOutputStreamPrivate *priv = jsonrpc_output_stream_get_instance_private (self);
+  const GList *iter;
+  GList *list;
 
-  g_assert (G_IS_OUTPUT_STREAM (stream));
-  g_assert (G_IS_ASYNC_RESULT (result));
-  g_assert (G_IS_TASK (task));
+  g_assert (JSONRPC_IS_OUTPUT_STREAM (self));
 
-  if (!g_output_stream_flush_finish (stream, result, &error))
+  list = priv->queue.head;
+
+  priv->queue.head = NULL;
+  priv->queue.tail = NULL;
+  priv->queue.length = 0;
+
+  for (iter = list; iter != NULL; iter = iter->next)
     {
-      g_task_return_error (task, g_steal_pointer (&error));
-      return;
+      g_autoptr(GTask) task = iter->data;
+
+      g_task_return_new_error (task,
+                               G_IO_ERROR,
+                               G_IO_ERROR_FAILED,
+                               "Task failed due to stream failure");
     }
 
-  g_task_return_boolean (task, TRUE);
+  g_list_free (list);
+}
+
+static void
+jsonrpc_output_stream_pump (JsonrpcOutputStream *self)
+{
+  JsonrpcOutputStreamPrivate *priv = jsonrpc_output_stream_get_instance_private (self);
+  g_autoptr(GTask) task = NULL;
+  const guint8 *data;
+  GCancellable *cancellable;
+  GBytes *bytes;
+  gsize len;
+
+  g_assert (JSONRPC_IS_OUTPUT_STREAM (self));
+
+  if (priv->queue.length == 0)
+    return;
+
+  task = g_queue_pop_head (&priv->queue);
+  bytes = g_task_get_task_data (task);
+  data = g_bytes_get_data (bytes, &len);
+  cancellable = g_task_get_cancellable (task);
+
+  g_output_stream_write_all_async (G_OUTPUT_STREAM (self),
+                                   data,
+                                   len,
+                                   G_PRIORITY_DEFAULT,
+                                   cancellable,
+                                   jsonrpc_output_stream_write_message_async_cb,
+                                   g_steal_pointer (&task));
 }
 
 static void
@@ -116,15 +179,17 @@ jsonrpc_output_stream_write_message_async_cb (GObject      *object,
                                               gpointer      user_data)
 {
   GOutputStream *stream = (GOutputStream *)object;
+  JsonrpcOutputStream *self;
   g_autoptr(GError) error = NULL;
   g_autoptr(GTask) task = user_data;
-  GCancellable *cancellable;
   GBytes *bytes;
   gsize n_written;
 
   g_assert (G_IS_OUTPUT_STREAM (stream));
   g_assert (G_IS_ASYNC_RESULT (result));
   g_assert (G_IS_TASK (task));
+  self = g_task_get_source_object (task);
+  g_assert (JSONRPC_IS_OUTPUT_STREAM (self));
 
   if (!g_output_stream_write_all_finish (stream, result, &n_written, &error))
     {
@@ -140,16 +205,13 @@ jsonrpc_output_stream_write_message_async_cb (GObject      *object,
                                G_IO_ERROR,
                                G_IO_ERROR_CLOSED,
                                "Failed to write all bytes to peer");
+      jsonrpc_output_stream_fail_pending (self);
       return;
     }
 
-  cancellable = g_task_get_cancellable (task);
+  g_task_return_boolean (task, TRUE);
 
-  g_output_stream_flush_async (stream,
-                               G_PRIORITY_DEFAULT,
-                               cancellable,
-                               jsonrpc_output_stream_flush_cb,
-                               g_steal_pointer (&task));
+  jsonrpc_output_stream_pump (self);
 }
 
 void
@@ -159,11 +221,10 @@ jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
                                            GAsyncReadyCallback  callback,
                                            gpointer             user_data)
 {
+  JsonrpcOutputStreamPrivate *priv = jsonrpc_output_stream_get_instance_private (self);
   g_autoptr(GBytes) bytes = NULL;
   g_autoptr(GTask) task = NULL;
   g_autoptr(GError) error = NULL;
-  const guint8 *data;
-  gsize len;
 
   g_return_if_fail (JSONRPC_IS_OUTPUT_STREAM (self));
   g_return_if_fail (node != NULL);
@@ -178,17 +239,9 @@ jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
       return;
     }
 
-  g_task_set_task_data (task, g_bytes_ref (bytes), (GDestroyNotify)g_bytes_unref);
-
-  data = g_bytes_get_data (bytes, &len);
-
-  g_output_stream_write_all_async (G_OUTPUT_STREAM (self),
-                                   data,
-                                   len,
-                                   G_PRIORITY_DEFAULT,
-                                   cancellable,
-                                   jsonrpc_output_stream_write_message_async_cb,
-                                   g_steal_pointer (&task));
+  g_task_set_task_data (task, g_steal_pointer (&bytes), (GDestroyNotify)g_bytes_unref);
+  g_queue_push_tail (&priv->queue, g_steal_pointer (&task));
+  jsonrpc_output_stream_pump (self);
 }
 
 gboolean
