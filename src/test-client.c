@@ -19,6 +19,7 @@ static gboolean
 timeout_cb (gpointer data)
 {
   jsonrpc_client_close_async (client, NULL, close_cb, NULL);
+  return G_SOURCE_REMOVE;
 }
 
 static void
