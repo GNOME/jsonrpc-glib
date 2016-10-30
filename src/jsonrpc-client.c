@@ -1017,16 +1017,10 @@ jsonrpc_client_close (JsonrpcClient  *self,
     g_cancellable_cancel (priv->read_loop_cancellable);
 
   if (!g_output_stream_is_closed (G_OUTPUT_STREAM (priv->output_stream)))
-    {
-      if (!g_output_stream_close (G_OUTPUT_STREAM (priv->output_stream), cancellable, error))
-        return FALSE;
-    }
+    g_output_stream_close (G_OUTPUT_STREAM (priv->output_stream), cancellable, NULL);
 
   if (!g_input_stream_is_closed (G_INPUT_STREAM (priv->input_stream)))
-    {
-      if (!g_input_stream_close (G_INPUT_STREAM (priv->input_stream), cancellable, error))
-        return FALSE;
-    }
+    g_input_stream_close (G_INPUT_STREAM (priv->input_stream), cancellable, NULL);
 
   invocations = g_steal_pointer (&priv->invocations);
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
