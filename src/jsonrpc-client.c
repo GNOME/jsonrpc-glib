@@ -1001,9 +1001,6 @@ jsonrpc_client_close (JsonrpcClient  *self,
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GHashTable) invocations = NULL;
-  g_autoptr(GError) local_error = NULL;
-  GHashTableIter iter;
-  GTask *task;
 
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
@@ -1025,13 +1022,20 @@ jsonrpc_client_close (JsonrpcClient  *self,
   invocations = g_steal_pointer (&priv->invocations);
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
 
-  local_error = g_error_new_literal (G_IO_ERROR,
-                                     G_IO_ERROR_CLOSED,
-                                     "The underlying stream was closed");
+  if (g_hash_table_size (invocations) > 0)
+    {
+      g_autoptr(GError) local_error = NULL;
+      GTask *task;
+      GHashTableIter iter;
 
-  g_hash_table_iter_init (&iter, invocations);
-  while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
-    g_task_return_error (task, g_error_copy (local_error));
+      local_error = g_error_new_literal (G_IO_ERROR,
+                                         G_IO_ERROR_CLOSED,
+                                         "The underlying stream was closed");
+
+      g_hash_table_iter_init (&iter, invocations);
+      while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
+        g_task_return_error (task, g_error_copy (local_error));
+    }
 
   return TRUE;
 }
