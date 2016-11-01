@@ -1,11 +1,13 @@
 lib_LTLIBRARIES = libjsonrpc-glib-@API_VERSION@.la
 noinst_PROGRAMS =
 
+
 TESTS =
 CLEANFILES =
 DISTCLEANFILES =
 EXTRA_DIST =
 LOG_COMPILER = $(top_srcdir)/build-aux/tap-test
+
 
 headersdir = $(includedir)/jsonrpc-glib-@API_VERSION@
 nobase_headers_DATA = \
@@ -41,6 +43,7 @@ libjsonrpc_glib_@API_VERSION@_la_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(NULL)
 
+
 noinst_PROGRAMS += test-jcon
 TESTS += test-jcon
 test_jcon_CFLAGS = $(JSONRPC_CFLAGS)
@@ -64,6 +67,7 @@ test_client_LDADD = \
 	$(JSONRPC_LIBS) \
 	libjsonrpc-glib-@API_VERSION@.la \
 	$(NULL)
+
 
 if HAVE_INTROSPECTION
 -include $(INTROSPECTION_MAKEFILE)
@@ -103,6 +107,29 @@ typelibdir = $(libdir)/girepository-1.0
 typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
 
 CLEANFILES += $(gir_DATA) $(typelib_DATA)
+endif
+
+
+if ENABLE_VAPIGEN
+-include $(VAPIGEN_MAKEFILE)
+
+jsonrpc-glib-@API_VERSION@.vapi: Jsonrpc-@API_VERSION@.gir
+
+VAPIGEN_VAPIS = jsonrpc-glib-@API_VERSION@.vapi
+
+jsonrpc_glib_@API_VERSION@_vapi_DEPS = gio-2.0 json-glib-1.0
+jsonrpc_glib_@API_VERSION@_vapi_METADATADIRS = $(srcdir)
+jsonrpc_glib_@API_VERSION@_vapi_FILES = Jsonrpc-@API_VERSION@.gir
+
+jsonrpc-glib-@API_VERSION@.deps: Makefile
+	$(AM_V_GEN) echo $(libjsonrpc_glib_@API_VERSION@_vapi_DEPS) | tr ' ' '\n' > $@
+
+vapidir = $(datadir)/vala/vapi
+vapi_DATA = $(VAPIGEN_VAPIS) $(VAPIGEN_VAPIS:.vapi=.deps)
+
+EXTRA_DIST += jsonrpc-glib-@API_VERSION@.deps
+
+DISTCLEANFILES += $(vapi_DATA)
 endif
 
 -include $(top_srcdir)/git.mk
