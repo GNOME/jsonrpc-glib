@@ -1,6 +1,10 @@
 lib_LTLIBRARIES = libjsonrpc-glib-@API_VERSION@.la
 noinst_PROGRAMS =
+
 TESTS =
+CLEANFILES =
+DISTCLEANFILES =
+EXTRA_DIST =
 LOG_COMPILER = $(top_srcdir)/build-aux/tap-test
 
 headersdir = $(includedir)/jsonrpc-glib-@API_VERSION@
@@ -60,5 +64,45 @@ test_client_LDADD = \
 	$(JSONRPC_LIBS) \
 	libjsonrpc-glib-@API_VERSION@.la \
 	$(NULL)
+
+if HAVE_INTROSPECTION
+-include $(INTROSPECTION_MAKEFILE)
+
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
+
+introspection_sources = \
+	jsonrpc-client.c \
+	jsonrpc-client.h \
+	jsonrpc-server.c \
+	jsonrpc-server.h \
+	jsonrpc-input-stream.c \
+	jsonrpc-input-stream.h \
+	jsonrpc-output-stream.c \
+	jsonrpc-output-stream.h \
+	$(NULL)
+
+Jsonrpc-@API_VERSION@.gir: libjsonrpc-glib-@API_VERSION@.la
+Jsonrpc_@API_VERSION@_gir_INCLUDES = Gio-2.0 Json-1.0
+Jsonrpc_@API_VERSION@_gir_CFLAGS = $(libjsonrpc_glib_@API_VERSION@_la_CFLAGS)
+Jsonrpc_@API_VERSION@_gir_LIBS = libjsonrpc-glib-@API_VERSION@.la
+Jsonrpc_@API_VERSION@_gir_FILES = $(introspection_sources)
+Jsonrpc_@API_VERSION@_gir_SCANNERFLAGS = \
+	-n Jsonrpc \
+	--identifier-prefix Jsonrpc \
+	--symbol-prefix jsonrpc \
+	-DJSONRPC_GLIB_COMPILATION \
+	$(NULL)
+INTROSPECTION_GIRS += Jsonrpc-@API_VERSION@.gir
+
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES += $(gir_DATA) $(typelib_DATA)
+endif
 
 -include $(top_srcdir)/git.mk
