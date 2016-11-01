@@ -201,22 +201,39 @@ is_jsonrpc_result (JsonNode *node)
  * Check to see if this looks like a proper method call for an RPC.
  */
 static gboolean
-is_jsonrpc_call (JsonNode *node)
+is_jsonrpc_call (JsonNode     *node,
+                 JsonNode    **id,
+                 JsonNode    **params,
+                 const gchar **method)
 {
-  JsonNode *id = NULL;
-  JsonNode *params = NULL;
-  const gchar *method = NULL;
+  JsonNode *tmp_id = NULL;
+  JsonNode *tmp_params = NULL;
+  const gchar *tmp_method = NULL;
   gboolean success;
 
   g_assert (JSON_NODE_HOLDS_OBJECT (node));
 
   success = JCON_EXTRACT (node,
-    "id", JCONE_NODE (id),
-    "method", JCONE_STRING (method),
-    "params", JCONE_NODE (params)
+    "id", JCONE_NODE (tmp_id),
+    "method", JCONE_STRING (tmp_method),
+    "params", JCONE_NODE (tmp_params)
   );
 
-  return success && id != NULL && method != NULL && params != NULL;
+  if (success && tmp_id != NULL && tmp_method != NULL && tmp_params != NULL)
+    {
+      if (id != NULL)
+        *id = tmp_id;
+
+      if (method != NULL)
+        *method = tmp_method;
+
+      if (params != NULL)
+        *params = tmp_params;
+
+      return TRUE;
+    }
+
+  return FALSE;
 }
 
 /*
@@ -558,6 +575,9 @@ jsonrpc_client_call_read_cb (GObject      *object,
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(JsonNode) node = NULL;
   g_autoptr(GError) error = NULL;
+  JsonNode *id_node = NULL;
+  JsonNode *params_node = NULL;
+  const gchar *method = NULL;
   gint id = -1;
 
   g_assert (JSONRPC_IS_INPUT_STREAM (stream));
@@ -647,23 +667,14 @@ jsonrpc_client_call_read_cb (GObject      *object,
   /*
    * If this is a method call, emit the handle-call signal.
    */
-  if (is_jsonrpc_call (node))
+  if (is_jsonrpc_call (node,
+                       &id_node,
+                       &params_node,
+                       &method))
     {
-      JsonNode *id_node = NULL;
-      JsonNode *params = NULL;
-      const gchar *method = NULL;
       gboolean ret = FALSE;
-      gboolean success;
 
-      success = JCON_EXTRACT (node,
-        "id", JCONE_NODE (id_node),
-        "method", JCONE_STRING (method),
-        "params", JCONE_NODE (params)
-      );
-
-      g_assert (success);
-
-      g_signal_emit (self, signals [HANDLE_CALL], 0, method, id_node, params, &ret);
+      g_signal_emit (self, signals [HANDLE_CALL], 0, method, id_node, params_node, &ret);
 
       if (ret == FALSE)
         {
@@ -917,9 +928,9 @@ jsonrpc_client_error_quark (void)
 }
 
 static void
-jsonrpc_client_notification_write_cb (GObject      *object,
-                                      GAsyncResult *result,
-                                      gpointer      user_data)
+jsonrpc_client_send_notification_write_cb (GObject      *object,
+                                           GAsyncResult *result,
+                                           gpointer      user_data)
 {
   JsonrpcOutputStream *stream = (JsonrpcOutputStream *)object;
   g_autoptr(GTask) task = user_data;
@@ -936,7 +947,7 @@ jsonrpc_client_notification_write_cb (GObject      *object,
 }
 
 /**
- * jsonrpc_client_notification:
+ * jsonrpc_client_send_notification:
  * @self: A #JsonrpcClient
  * @method: the name of the method to call
  * @params: (transfer full) (nullable): A #JsonNode of parameters or %NULL
@@ -950,11 +961,11 @@ jsonrpc_client_notification_write_cb (GObject      *object,
  * Returns; %TRUE on success; otherwise %FALSE and @error is set.
  */
 gboolean
-jsonrpc_client_notification (JsonrpcClient  *self,
-                             const gchar    *method,
-                             JsonNode       *params,
-                             GCancellable   *cancellable,
-                             GError        **error)
+jsonrpc_client_send_notification (JsonrpcClient  *self,
+                                  const gchar    *method,
+                                  JsonNode       *params,
+                                  GCancellable   *cancellable,
+                                  GError        **error)
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(JsonNode) message = NULL;
@@ -984,7 +995,7 @@ jsonrpc_client_notification (JsonrpcClient  *self,
 }
 
 /**
- * jsonrpc_client_notification_async:
+ * jsonrpc_client_send_notification_async:
  * @self: A #JsonrpcClient
  * @method: the name of the method to call
  * @params: (transfer full) (nullable): A #JsonNode of parameters or %NULL
@@ -1000,12 +1011,12 @@ jsonrpc_client_notification (JsonrpcClient  *self,
  * This function takes ownership of @params.
  */
 void
-jsonrpc_client_notification_async (JsonrpcClient       *self,
-                                   const gchar         *method,
-                                   JsonNode            *params,
-                                   GCancellable        *cancellable,
-                                   GAsyncReadyCallback  callback,
-                                   gpointer             user_data)
+jsonrpc_client_send_notification_async (JsonrpcClient       *self,
+                                        const gchar         *method,
+                                        JsonNode            *params,
+                                        GCancellable        *cancellable,
+                                        GAsyncReadyCallback  callback,
+                                        gpointer             user_data)
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(JsonNode) message = NULL;
@@ -1017,7 +1028,7 @@ jsonrpc_client_notification_async (JsonrpcClient       *self,
   g_return_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable));
 
   task = g_task_new (self, cancellable, callback, user_data);
-  g_task_set_source_tag (task, jsonrpc_client_notification_async);
+  g_task_set_source_tag (task, jsonrpc_client_send_notification_async);
 
   if (!jsonrpc_client_check_ready (self, &error))
     {
@@ -1037,17 +1048,17 @@ jsonrpc_client_notification_async (JsonrpcClient       *self,
   jsonrpc_output_stream_write_message_async (priv->output_stream,
                                              message,
                                              cancellable,
-                                             jsonrpc_client_notification_write_cb,
+                                             jsonrpc_client_send_notification_write_cb,
                                              g_steal_pointer (&task));
 
   json_node_unref (params);
 }
 
 /**
- * jsonrpc_client_notification_finish:
+ * jsonrpc_client_send_notification_finish:
  * @self: A #JsonrpcClient
  *
- * Completes an asynchronous call to jsonrpc_client_notification_async().
+ * Completes an asynchronous call to jsonrpc_client_send_notification_async().
  *
  * Successful completion of this function only indicates that the request
  * has been written to the underlying buffer, not that the peer has received
@@ -1057,9 +1068,9 @@ jsonrpc_client_notification_async (JsonrpcClient       *self,
  *   %FALSE and @error is set.
  */
 gboolean
-jsonrpc_client_notification_finish (JsonrpcClient  *self,
-                                    GAsyncResult   *result,
-                                    GError        **error)
+jsonrpc_client_send_notification_finish (JsonrpcClient  *self,
+                                         GAsyncResult   *result,
+                                         GError        **error)
 {
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
   g_return_val_if_fail (G_IS_TASK (result), FALSE);
