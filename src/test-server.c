@@ -123,7 +123,7 @@ test_basic (void)
                     G_CALLBACK (handle_notification),
                     &count);
 
-  r = jsonrpc_client_notification (client, "testNotification", json_node_new (JSON_NODE_NULL), NULL, &error);
+  r = jsonrpc_client_send_notification (client, "testNotification", json_node_new (JSON_NODE_NULL), NULL, &error);
   g_assert_no_error (error);
   g_assert_cmpint (r, ==, TRUE);
 
