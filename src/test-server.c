@@ -24,6 +24,7 @@
 #include <gio/gio.h>
 #include <gio/gunixoutputstream.h>
 #include <gio/gunixinputstream.h>
+#include <glib-unix.h>
 #include <jsonrpc-glib.h>
 #include <unistd.h>
 
@@ -94,11 +95,13 @@ test_basic (void)
   gint count = 0;
   gint r;
 
-  r = pipe2 (pair_a, O_CLOEXEC);
-  g_assert_cmpint (r, ==, 0);
+  r = g_unix_open_pipe (pair_a, FD_CLOEXEC, &error);
+  g_assert_no_error (error);
+  g_assert_cmpint (r, ==, TRUE);
 
-  r = pipe2 (pair_b, O_CLOEXEC);
-  g_assert_cmpint (r, ==, 0);
+  r = g_unix_open_pipe (pair_b, FD_CLOEXEC, &error);
+  g_assert_no_error (error);
+  g_assert_cmpint (r, ==, TRUE);
 
   input_a = g_unix_input_stream_new (pair_a[0], TRUE);
   input_b = g_unix_input_stream_new (pair_b[0], TRUE);
