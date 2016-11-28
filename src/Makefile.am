@@ -88,7 +88,7 @@ introspection_sources = \
 	$(NULL)
 
 Jsonrpc-@API_VERSION@.gir: libjsonrpc-glib-@API_VERSION@.la
-Jsonrpc_@API_VERSION@_gir_INCLUDES = Gio-2.0 Json-1.0
+Jsonrpc_@API_VERSION@_gir_INCLUDES = Gio-2.0
 Jsonrpc_@API_VERSION@_gir_CFLAGS = $(libjsonrpc_glib_@API_VERSION@_la_CFLAGS)
 Jsonrpc_@API_VERSION@_gir_LIBS = libjsonrpc-glib-@API_VERSION@.la
 Jsonrpc_@API_VERSION@_gir_FILES = $(introspection_sources)

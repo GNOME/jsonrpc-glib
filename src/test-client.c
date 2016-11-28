@@ -29,7 +29,7 @@ call_cb (GObject      *object,
 {
   JsonrpcClient *client = (JsonrpcClient *)object;
   g_autoptr(GError) error = NULL;
-  g_autoptr(JsonNode) return_value = NULL;
+  g_autoptr(GVariant) return_value = NULL;
   g_autofree gchar *str = NULL;
 
   g_assert (JSONRPC_IS_CLIENT (client));
@@ -58,10 +58,10 @@ wait_cb (GObject      *object,
 static void
 notification_cb (JsonrpcClient *client,
                  const gchar   *method,
-                 JsonNode      *params,
+                 GVariant      *params,
                  gpointer       user_data)
 {
-  g_autofree gchar *str = json_to_string (params, FALSE);
+  g_autofree gchar *str = g_variant_print (params, TRUE);
 
   g_message ("(Notification): %s: %s", method, str);
 }
@@ -73,7 +73,7 @@ main (gint   argc,
   g_autoptr(GIOStream) io_stream = NULL;
   g_autoptr(GError) error = NULL;
   g_autoptr(GSubprocess) subprocess = NULL;
-  g_autoptr(JsonNode) params = NULL;
+  g_auto(GVariantDict) params = { 0 };
   GInputStream *stdout_pipe;
   GOutputStream *stdin_pipe;
 
@@ -116,13 +116,12 @@ main (gint   argc,
                                              "sample_project",
                                              NULL);
 
-  params = JCON_NEW (
-    "processId", JCON_INT (getpid ()),
-    "rootPath", JCON_STRING (path),
-    "capabilities", "{", "}"
-  );
+  g_variant_dict_init (&params, NULL);
+  g_variant_dict_insert (&params, "processId", "i", getpid ());
+  g_variant_dict_insert (&params, "rootPath", "s", path);
+  g_variant_dict_insert_value (&params, "capabilities", g_variant_new ("a{sv}", NULL, NULL, NULL));
 
-  jsonrpc_client_call_async (client, "initialize", g_steal_pointer (&params), NULL, call_cb, NULL);
+  jsonrpc_client_call_async (client, "initialize", g_variant_dict_end (&params), NULL, call_cb, NULL);
 
   g_timeout_add_seconds (5, timeout_cb, NULL);
 

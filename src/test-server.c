@@ -49,35 +49,40 @@ static gboolean
 handle_call (JsonrpcServer *server,
              JsonrpcClient *client,
              const gchar   *method,
-             JsonNode      *id,
-             JsonNode      *params,
+             GVariant      *id,
+             GVariant      *params,
              gpointer       user_data)
 {
   const gchar *rootPath = NULL;
-  g_autoptr(JsonNode) return_value = NULL;
   g_autoptr(GError) error = NULL;
+  g_auto(GVariantDict) dict = { 0 };
+  gboolean r;
 
-  g_assert (JSON_NODE_HOLDS_VALUE (id));
+  g_assert (id != NULL);
+  g_assert (params != NULL);
+  g_assert (g_variant_is_of_type (id, G_VARIANT_TYPE_INT64));
+  g_assert (g_variant_is_of_type (params, G_VARIANT_TYPE_VARDICT));
 
-  JCON_EXTRACT (params, "rootPath", JCONE_STRING (rootPath));
+  g_variant_dict_init (&dict, params);
+  r = g_variant_dict_lookup (&dict, "rootPath", "&s", &rootPath);
+  g_assert_cmpint (r, ==, TRUE);
+  g_assert_cmpstr (rootPath, ==, ".");
+  g_variant_dict_clear (&dict);
 
-  g_assert_cmpint (1, ==, json_node_get_int (id));
+  g_assert_cmpint (1, ==, g_variant_get_int64 (id));
   g_assert_cmpstr (method, ==, "initialize");
 
-  return_value = JCON_NEW ("foo", "bar");
-
-  jsonrpc_client_reply (client,
-                        json_node_ref (id),
-                        g_steal_pointer (&return_value),
-                        NULL,
-                        &error);
+  g_variant_dict_init (&dict, NULL);
+  g_variant_dict_insert (&dict, "foo", "s", "bar");
+  r = jsonrpc_client_reply (client, id, g_variant_dict_end (&dict), NULL, &error);
   g_assert_no_error (error);
+  g_assert_cmpint (r, ==, TRUE);
 
   return TRUE;
 }
 
 static void
-test_basic (void)
+test_basic (gboolean use_gvariant)
 {
   g_autoptr(JsonrpcServer) server = NULL;
   g_autoptr(JsonrpcClient) client = NULL;
@@ -87,9 +92,10 @@ test_basic (void)
   g_autoptr(GOutputStream) output_b = NULL;
   g_autoptr(GIOStream) stream_a = NULL;
   g_autoptr(GIOStream) stream_b = NULL;
-  g_autoptr(JsonNode) message = NULL;
-  g_autoptr(JsonNode) return_value = NULL;
+  g_autoptr(GVariant) message = NULL;
+  g_autoptr(GVariant) return_value = NULL;
   g_autoptr(GError) error = NULL;
+  GVariantDict dict;
   gint pair_a[2];
   gint pair_b[2];
   gint count = 0;
@@ -113,6 +119,9 @@ test_basic (void)
 
   client = jsonrpc_client_new (stream_a);
 
+  /* Possibly upgrade connection to gvariant encoding */
+  jsonrpc_client_set_use_gvariant (client, use_gvariant);
+
   server = jsonrpc_server_new ();
   jsonrpc_server_accept_io_stream (server, stream_b);
 
@@ -126,11 +135,13 @@ test_basic (void)
                     G_CALLBACK (handle_notification),
                     &count);
 
-  r = jsonrpc_client_send_notification (client, "testNotification", json_node_new (JSON_NODE_NULL), NULL, &error);
+  r = jsonrpc_client_send_notification (client, "testNotification", NULL, NULL, &error);
   g_assert_no_error (error);
   g_assert_cmpint (r, ==, TRUE);
 
-  message = JCON_NEW ("rootPath", JCON_STRING ("."));
+  g_variant_dict_init (&dict, NULL);
+  g_variant_dict_insert (&dict, "rootPath", "s", ".");
+  message = g_variant_dict_end (&dict);
 
   r = jsonrpc_client_call (client,
                            "initialize",
@@ -145,11 +156,24 @@ test_basic (void)
   g_assert_cmpint (count, ==, 1);
 }
 
+static void
+test_basic_json (void)
+{
+  test_basic (FALSE);
+}
+
+static void
+test_basic_gvariant (void)
+{
+  test_basic (TRUE);
+}
+
 gint
 main (gint   argc,
       gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
-  g_test_add_func ("/Jsonrpc/Server/basic", test_basic);
+  g_test_add_func ("/Jsonrpc/Server/json", test_basic_json);
+  g_test_add_func ("/Jsonrpc/Server/gvariant", test_basic_gvariant);
   return g_test_run ();
 }
