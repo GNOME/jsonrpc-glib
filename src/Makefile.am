@@ -24,6 +24,7 @@ libjsonrpc_glib_@API_VERSION@_la_SOURCES = \
 	$(nobase_headers_DATA) \
 	jsonrpc-client.c \
 	jsonrpc-input-stream.c \
+	jsonrpc-input-stream-private.h \
 	jsonrpc-output-stream.c \
 	jsonrpc-server.c \
 	jcon.c \

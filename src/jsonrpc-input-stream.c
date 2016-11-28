@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "jsonrpc-input-stream.h"
+#include "jsonrpc-input-stream-private.h"
 
 typedef struct
 {
@@ -36,6 +37,7 @@ typedef struct
 typedef struct
 {
   gssize max_size_bytes;
+  guint has_seen_gvariant : 1;
 } JsonrpcInputStreamPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcInputStream, jsonrpc_input_stream, G_TYPE_DATA_INPUT_STREAM)
@@ -287,11 +289,17 @@ jsonrpc_input_stream_read_message_finish (JsonrpcInputStream  *self,
                                           GVariant           **message,
                                           GError             **error)
 {
+  JsonrpcInputStreamPrivate *priv = jsonrpc_input_stream_get_instance_private (self);
   g_autoptr(GVariant) local_message = NULL;
+  ReadState *state;
   gboolean ret;
 
   g_return_val_if_fail (JSONRPC_IS_INPUT_STREAM (self), FALSE);
   g_return_val_if_fail (G_IS_TASK (result), FALSE);
+
+  /* track if we've seen an application/gvariant */
+  state = g_task_get_task_data (G_TASK (result));
+  priv->has_seen_gvariant |= state->use_gvariant;
 
   local_message = g_task_propagate_pointer (G_TASK (result), error);
   ret = local_message != NULL;
@@ -357,3 +365,12 @@ jsonrpc_input_stream_read_message (JsonrpcInputStream  *self,
   return ret;
 }
 
+gboolean
+_jsonrpc_input_stream_get_has_seen_gvariant (JsonrpcInputStream *self)
+{
+  JsonrpcInputStreamPrivate *priv = jsonrpc_input_stream_get_instance_private (self);
+
+  g_return_val_if_fail (JSONRPC_IS_INPUT_STREAM (self), FALSE);
+
+  return priv->has_seen_gvariant;
+}

@@ -54,6 +54,7 @@
 #include "jcon.h"
 #include "jsonrpc-client.h"
 #include "jsonrpc-input-stream.h"
+#include "jsonrpc-input-stream-private.h"
 #include "jsonrpc-output-stream.h"
 
 typedef struct
@@ -550,6 +551,10 @@ jsonrpc_client_call_read_cb (GObject      *object,
     }
 
   g_assert (message != NULL);
+
+  /* If we received a gvariant-based message, upgrade connection */
+  if (_jsonrpc_input_stream_get_has_seen_gvariant (stream))
+    jsonrpc_client_set_use_gvariant (self, TRUE);
 
   /* Make sure we got a proper type back from the variant. */
   if (!g_variant_is_of_type (message, G_VARIANT_TYPE_VARDICT))
