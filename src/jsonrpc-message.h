@@ -99,53 +99,68 @@ typedef struct
   GVariant **variantptr;
 } JsonrpcMessageGetVariant;
 
-#define _JSONRPC_MESSAGE_PUT_STRING_MAGIC  "@!@|PUTS"
-#define _JSONRPC_MESSAGE_GET_STRING_MAGIC  "@!@|GETS"
-#define _JSONRPC_MESSAGE_PUT_INT32_MAGIC   "@!@|PUTI"
-#define _JSONRPC_MESSAGE_GET_INT32_MAGIC   "@!@|GETI"
-#define _JSONRPC_MESSAGE_PUT_BOOLEAN_MAGIC "@!@|PUTB"
-#define _JSONRPC_MESSAGE_GET_BOOLEAN_MAGIC "@!@|GETB"
-#define _JSONRPC_MESSAGE_PUT_DOUBLE_MAGIC  "@!@|PUTD"
-#define _JSONRPC_MESSAGE_GET_DOUBLE_MAGIC  "@!@|GETD"
-#define _JSONRPC_MESSAGE_GET_ITER_MAGIC    "@!@|GETT"
-#define _JSONRPC_MESSAGE_GET_DICT_MAGIC    "@!@|GETC"
-#define _JSONRPC_MESSAGE_GET_VARIANT_MAGIC "@!@|GETV"
+#define _JSONRPC_MAGIC(s) ("@!^%" s)
+#define _JSONRPC_MAGIC_C(a,b,c,d) {'@','!','^','%',a,b,c,d}
 
-#define JSONRPC_MESSAGE_NEW(...) \
-  jsonrpc_message_new(__VA_ARGS__, NULL)
+#define _JSONRPC_MESSAGE_PUT_STRING_MAGIC  _JSONRPC_MAGIC("PUTS")
+#define _JSONRPC_MESSAGE_GET_STRING_MAGIC  _JSONRPC_MAGIC("GETS")
+#define _JSONRPC_MESSAGE_PUT_INT32_MAGIC   _JSONRPC_MAGIC("PUTI")
+#define _JSONRPC_MESSAGE_GET_INT32_MAGIC   _JSONRPC_MAGIC("GETI")
+#define _JSONRPC_MESSAGE_PUT_BOOLEAN_MAGIC _JSONRPC_MAGIC("PUTB")
+#define _JSONRPC_MESSAGE_GET_BOOLEAN_MAGIC _JSONRPC_MAGIC("GETB")
+#define _JSONRPC_MESSAGE_PUT_DOUBLE_MAGIC  _JSONRPC_MAGIC("PUTD")
+#define _JSONRPC_MESSAGE_GET_DOUBLE_MAGIC  _JSONRPC_MAGIC("GETD")
+#define _JSONRPC_MESSAGE_GET_ITER_MAGIC    _JSONRPC_MAGIC("GETT")
+#define _JSONRPC_MESSAGE_GET_DICT_MAGIC    _JSONRPC_MAGIC("GETC")
+#define _JSONRPC_MESSAGE_GET_VARIANT_MAGIC _JSONRPC_MAGIC("GETV")
+
+#define _JSONRPC_MESSAGE_PUT_STRING_MAGIC_C  _JSONRPC_MAGIC_C('P','U','T','S')
+#define _JSONRPC_MESSAGE_GET_STRING_MAGIC_C  _JSONRPC_MAGIC_C('G','E','T','S')
+#define _JSONRPC_MESSAGE_PUT_INT32_MAGIC_C   _JSONRPC_MAGIC_C('P','U','T','I')
+#define _JSONRPC_MESSAGE_GET_INT32_MAGIC_C   _JSONRPC_MAGIC_C('G','E','T','I')
+#define _JSONRPC_MESSAGE_PUT_BOOLEAN_MAGIC_C _JSONRPC_MAGIC_C('P','U','T','B')
+#define _JSONRPC_MESSAGE_GET_BOOLEAN_MAGIC_C _JSONRPC_MAGIC_C('G','E','T','B')
+#define _JSONRPC_MESSAGE_PUT_DOUBLE_MAGIC_C  _JSONRPC_MAGIC_C('P','U','T','D')
+#define _JSONRPC_MESSAGE_GET_DOUBLE_MAGIC_C  _JSONRPC_MAGIC_C('G','E','T','D')
+#define _JSONRPC_MESSAGE_GET_ITER_MAGIC_C    _JSONRPC_MAGIC_C('G','E','T','T')
+#define _JSONRPC_MESSAGE_GET_DICT_MAGIC_C    _JSONRPC_MAGIC_C('G','E','T','C')
+#define _JSONRPC_MESSAGE_GET_VARIANT_MAGIC_C _JSONRPC_MAGIC_C('G','E','T','V')
+
+#define JSONRPC_MESSAGE_NEW(first_, ...) \
+  jsonrpc_message_new(first_, __VA_ARGS__, NULL)
 #define JSONRPC_MESSAGE_PARSE(message, ...) \
-  jsonrpc_message_parse(message, __VA_ARGS__, NULL)
+  jsonrpc_message_parse(message,  __VA_ARGS__, NULL)
 #define JSONRPC_MESSAGE_PARSE_ARRAY(iter, ...) \
   jsonrpc_message_parse_array(iter, __VA_ARGS__, NULL)
 
 #define JSONRPC_MESSAGE_PUT_STRING(_val) \
-  &(JsonrpcMessagePutString) { .magic = _JSONRPC_MESSAGE_PUT_STRING_MAGIC, .val = _val }
+  (&((JsonrpcMessagePutString) { .magic = {_JSONRPC_MESSAGE_PUT_STRING_MAGIC_C}, .val = _val }))
 #define JSONRPC_MESSAGE_GET_STRING(_valptr) \
-  &(JsonrpcMessageGetString) { .magic = _JSONRPC_MESSAGE_GET_STRING_MAGIC, .valptr = _valptr }
+  (&((JsonrpcMessageGetString) { .magic = {_JSONRPC_MESSAGE_GET_STRING_MAGIC_C}, .valptr = _valptr }))
 
 #define JSONRPC_MESSAGE_PUT_INT32(_val) \
-  &(JsonrpcMessagePutInt32) { .magic = _JSONRPC_MESSAGE_PUT_INT32_MAGIC, .val = _val }
+  (&((JsonrpcMessagePutInt32) { .magic = {_JSONRPC_MESSAGE_PUT_INT32_MAGIC_C}, .val = _val }))
 #define JSONRPC_MESSAGE_GET_INT32(_valptr) \
-  &(JsonrpcMessageGetInt32) { .magic = _JSONRPC_MESSAGE_GET_INT32_MAGIC, .valptr = _valptr }
+  (&((JsonrpcMessageGetInt32) { .magic = {_JSONRPC_MESSAGE_GET_INT32_MAGIC_C}, .valptr = _valptr }))
 
 #define JSONRPC_MESSAGE_PUT_BOOLEAN(_val) \
-  &(JsonrpcMessagePutBoolean) { .magic = _JSONRPC_MESSAGE_PUT_BOOLEAN_MAGIC, .val = _val }
+  (&((JsonrpcMessagePutBoolean) { .magic = {_JSONRPC_MESSAGE_PUT_BOOLEAN_MAGIC_C}, .val = _val }))
 #define JSONRPC_MESSAGE_GET_BOOLEAN(_valptr) \
-  &(JsonrpcMessageGetBoolean) { .magic = _JSONRPC_MESSAGE_GET_BOOLEAN_MAGIC, .valptr = _valptr }
+  (&((JsonrpcMessageGetBoolean) { .magic = {_JSONRPC_MESSAGE_GET_BOOLEAN_MAGIC_C}, .valptr = _valptr }))
 
 #define JSONRPC_MESSAGE_PUT_DOUBLE(_val) \
-  &(JsonrpcMessagePutDouble) { .magic = _JSONRPC_MESSAGE_PUT_DOUBLE_MAGIC, .val = _val }
+  (&((JsonrpcMessagePutDouble) { .magic = {_JSONRPC_MESSAGE_PUT_DOUBLE_MAGIC_C}, .val = _val }))
 #define JSONRPC_MESSAGE_GET_DOUBLE(_valptr) \
-  &(JsonrpcMessageGetDouble) { .magic = _JSONRPC_MESSAGE_GET_DOUBLE_MAGIC, .valptr = _valptr }
+  (&((JsonrpcMessageGetDouble) { .magic = {_JSONRPC_MESSAGE_GET_DOUBLE_MAGIC_C}, .valptr = _valptr }))
 
 #define JSONRPC_MESSAGE_GET_ITER(_valptr) \
-  &(JsonrpcMessageGetIter) { .magic = _JSONRPC_MESSAGE_GET_ITER_MAGIC, .iterptr = _valptr }
+  (&((JsonrpcMessageGetIter) { .magic = {_JSONRPC_MESSAGE_GET_ITER_MAGIC_C}, .iterptr = _valptr }))
 
 #define JSONRPC_MESSAGE_GET_DICT(_valptr) \
-  &(JsonrpcMessageGetDict) { .magic = _JSONRPC_MESSAGE_GET_DICT_MAGIC, .dictptr = _valptr }
+  (&((JsonrpcMessageGetDict) { .magic = {_JSONRPC_MESSAGE_GET_DICT_MAGIC_C}, .dictptr = _valptr }))
 
 #define JSONRPC_MESSAGE_GET_VARIANT(_valptr) \
-  &(JsonrpcMessageGetVariant) { .magic = _JSONRPC_MESSAGE_GET_VARIANT_MAGIC, .variantptr = _valptr }
+  (&((JsonrpcMessageGetVariant) { .magic = {_JSONRPC_MESSAGE_GET_VARIANT_MAGIC_C}, .variantptr = _valptr }))
 
 GVariant *jsonrpc_message_new         (gpointer first_param, ...) G_GNUC_NULL_TERMINATED;
 gboolean  jsonrpc_message_parse       (GVariant *message, ...) G_GNUC_NULL_TERMINATED;
