@@ -51,7 +51,6 @@
 
 #include <glib.h>
 
-#include "jcon.h"
 #include "jsonrpc-client.h"
 #include "jsonrpc-input-stream.h"
 #include "jsonrpc-input-stream-private.h"

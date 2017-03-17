@@ -14,10 +14,10 @@ nobase_headers_DATA = \
 	jsonrpc-client.h \
 	jsonrpc-glib.h \
 	jsonrpc-input-stream.h \
+	jsonrpc-message.h \
 	jsonrpc-output-stream.h \
 	jsonrpc-server.h \
 	jsonrpc-version.h \
-	jcon.h \
 	$(NULL)
 
 libjsonrpc_glib_@API_VERSION@_la_SOURCES = \
@@ -25,9 +25,9 @@ libjsonrpc_glib_@API_VERSION@_la_SOURCES = \
 	jsonrpc-client.c \
 	jsonrpc-input-stream.c \
 	jsonrpc-input-stream-private.h \
+	jsonrpc-message.c \
 	jsonrpc-output-stream.c \
 	jsonrpc-server.c \
-	jcon.c \
 	$(NULL)
 
 libjsonrpc_glib_@API_VERSION@_la_CFLAGS = \
@@ -45,10 +45,10 @@ libjsonrpc_glib_@API_VERSION@_la_LDFLAGS = \
 	$(NULL)
 
 
-noinst_PROGRAMS += test-jcon
-TESTS += test-jcon
-test_jcon_CFLAGS = $(JSONRPC_CFLAGS)
-test_jcon_LDADD = \
+noinst_PROGRAMS += test-message
+TESTS += test-message
+test_message_CFLAGS = $(JSONRPC_CFLAGS)
+test_message_LDADD = \
 	$(JSONRPC_LIBS) \
 	libjsonrpc-glib-@API_VERSION@.la \
 	$(NULL)

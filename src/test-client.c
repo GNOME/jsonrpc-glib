@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "jcon.h"
 #include "jsonrpc-client.h"
 
 static JsonrpcClient *client;
