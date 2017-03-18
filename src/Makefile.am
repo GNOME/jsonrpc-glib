@@ -61,6 +61,14 @@ test_server_LDADD = \
 	libjsonrpc-glib-@API_VERSION@.la \
 	$(NULL)
 
+noinst_PROGRAMS += test-stress
+TESTS += test-stress
+test_stress_CFLAGS = $(JSONRPC_CFLAGS)
+test_stress_LDADD = \
+	$(JSONRPC_LIBS) \
+	libjsonrpc-glib-@API_VERSION@.la \
+	$(NULL)
+
 # Tests against the Rust Language Server "rls" tool.
 noinst_PROGRAMS += test-client
 test_client_CFLAGS = $(JSONRPC_CFLAGS)

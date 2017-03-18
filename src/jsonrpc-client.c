@@ -229,7 +229,13 @@ jsonrpc_client_panic (JsonrpcClient *self,
 
   priv->failed = TRUE;
 
-  g_warning ("%s(): %s", G_STRFUNC, error->message);
+  /*
+   * Ignore warning() on a few common cases that happen when we close the
+   * underlying socket/pipe/etc.
+   */
+  if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CLOSED) &&
+      !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_BROKEN_PIPE))
+    g_warning ("%s(): %s", G_STRFUNC, error->message);
 
   jsonrpc_client_close (self, NULL, NULL);
 
@@ -474,23 +480,31 @@ jsonrpc_client_new (GIOStream *io_stream)
 }
 
 static void
-jsonrpc_client_call_notify_completed (GTask      *task,
-                                      GParamSpec *pspec,
-                                      gpointer    user_data)
+jsonrpc_client_remove_from_invocatoins (JsonrpcClient *self,
+                                        GTask         *task)
 {
-  JsonrpcClientPrivate *priv;
-  JsonrpcClient *self;
+  JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   gpointer id;
 
+  g_assert (JSONRPC_IS_CLIENT (self));
   g_assert (G_IS_TASK (task));
-  g_assert (pspec != NULL);
-  g_assert (g_str_equal (pspec->name, "completed"));
 
-  self = g_task_get_source_object (task);
-  priv = jsonrpc_client_get_instance_private (self);
   id = g_task_get_task_data (task);
 
   g_hash_table_remove (priv->invocations, id);
+}
+
+static void
+jsonrpc_client_call_notify_completed (JsonrpcClient *self,
+                                      GParamSpec    *pspec,
+                                      GTask         *task)
+{
+  g_assert (JSONRPC_IS_CLIENT (self));
+  g_assert (pspec != NULL);
+  g_assert (g_str_equal (pspec->name, "completed"));
+  g_assert (G_IS_TASK (task));
+
+  jsonrpc_client_remove_from_invocatoins (self, task);
 }
 
 static void
@@ -501,12 +515,19 @@ jsonrpc_client_call_write_cb (GObject      *object,
   JsonrpcOutputStream *stream = (JsonrpcOutputStream *)object;
   g_autoptr(GTask) task = user_data;
   g_autoptr(GError) error = NULL;
+  JsonrpcClient *self;
 
   g_assert (JSONRPC_IS_OUTPUT_STREAM (stream));
+  g_assert (G_IS_ASYNC_RESULT (result));
   g_assert (G_IS_TASK (task));
+
+  self = g_task_get_source_object (task);
+  g_assert (JSONRPC_IS_CLIENT (self));
 
   if (!jsonrpc_output_stream_write_message_finish (stream, result, &error))
     {
+      jsonrpc_client_remove_from_invocatoins (self, task);
+      jsonrpc_client_panic (self, error);
       g_task_return_error (task, g_steal_pointer (&error));
       return;
     }
@@ -534,11 +555,12 @@ jsonrpc_client_call_read_cb (GObject      *object,
 
   if (!jsonrpc_input_stream_read_message_finish (stream, result, &message, &error))
     {
-      /*
-       * Handle jsonrpc_client_close() conditions gracefully.
-       */
+      /* Handle jsonrpc_client_close() conditions gracefully. */
       if (priv->in_shutdown && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-        return;
+        {
+          g_input_stream_close (G_INPUT_STREAM (stream), NULL, NULL);
+          return;
+        }
 
       /*
        * If we fail to read a message, that means we couldn't even receive
@@ -664,7 +686,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
           jsonrpc_output_stream_write_message_async (priv->output_stream, g_variant_dict_end (&reply), NULL, NULL, NULL);
         }
 
-      return;
+      goto begin_next_read;
     }
 
   /*
@@ -838,10 +860,11 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
       return;
     }
 
-  g_signal_connect (task,
-                    "notify::completed",
-                    G_CALLBACK (jsonrpc_client_call_notify_completed),
-                    NULL);
+  g_signal_connect_object (task,
+                           "notify::completed",
+                           G_CALLBACK (jsonrpc_client_call_notify_completed),
+                           self,
+                           G_CONNECT_SWAPPED);
 
   id = ++priv->sequence;
 
@@ -1093,10 +1116,17 @@ jsonrpc_client_close (JsonrpcClient  *self,
     g_cancellable_cancel (priv->read_loop_cancellable);
 
   if (!g_output_stream_is_closed (G_OUTPUT_STREAM (priv->output_stream)))
-    g_output_stream_close (G_OUTPUT_STREAM (priv->output_stream), cancellable, NULL);
+    {
+      g_autoptr(GError) output_error = NULL;
 
-  if (!g_input_stream_is_closed (G_INPUT_STREAM (priv->input_stream)))
-    g_input_stream_close (G_INPUT_STREAM (priv->input_stream), cancellable, NULL);
+      if (!g_output_stream_close (G_OUTPUT_STREAM (priv->output_stream), cancellable, &output_error))
+        g_warning ("Error closing output stream: %s", output_error->message);
+    }
+
+  /*
+   * Closing the input stream will fail, so just rely on the callback
+   * from the async function to complete/close the stream.
+   */
 
   invocations = g_steal_pointer (&priv->invocations);
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
