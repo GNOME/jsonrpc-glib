@@ -31,13 +31,13 @@ typedef struct
   gchar        *buffer;
   GVariantType *gvariant_type;
   gint16        priority;
-  gint          use_gvariant : 1;
+  guint         use_gvariant : 1;
 } ReadState;
 
 typedef struct
 {
   gssize max_size_bytes;
-  guint has_seen_gvariant : 1;
+  guint  has_seen_gvariant : 1;
 } JsonrpcInputStreamPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcInputStream, jsonrpc_input_stream, G_TYPE_DATA_INPUT_STREAM)
@@ -160,6 +160,7 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
   gsize length = 0;
 
   g_assert (JSONRPC_IS_INPUT_STREAM (self));
+  g_assert (G_IS_ASYNC_RESULT (result));
   g_assert (G_IS_TASK (task));
 
   state = g_task_get_task_data (task);
@@ -169,9 +170,13 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
 
   if (line == NULL)
     {
-      if (error == NULL)
-        goto read_next_line;
-      g_task_return_error (task, g_steal_pointer (&error));
+      if (error != NULL)
+        g_task_return_error (task, g_steal_pointer (&error));
+      else
+        g_task_return_new_error (task,
+                                 G_IO_ERROR,
+                                 G_IO_ERROR_FAILED,
+                                 "No data to read from peer");
       return;
     }
 
@@ -248,7 +253,6 @@ jsonrpc_input_stream_read_headers_cb (GObject      *object,
       return;
     }
 
-read_next_line:
   g_data_input_stream_read_line_async (G_DATA_INPUT_STREAM (self),
                                        state->priority,
                                        cancellable,
@@ -270,11 +274,12 @@ jsonrpc_input_stream_read_message_async (JsonrpcInputStream  *self,
 
   state = g_slice_new0 (ReadState);
   state->content_length = -1;
-  state->priority = G_PRIORITY_DEFAULT;
+  state->priority = G_PRIORITY_LOW;
 
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_source_tag (task, jsonrpc_input_stream_read_message_async);
   g_task_set_task_data (task, state, read_state_free);
+  g_task_set_priority (task, state->priority);
 
   g_data_input_stream_read_line_async (G_DATA_INPUT_STREAM (self),
                                        state->priority,

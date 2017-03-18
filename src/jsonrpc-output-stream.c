@@ -164,10 +164,11 @@ jsonrpc_output_stream_create_bytes (JsonrpcOutputStream  *self,
 
   buffer = g_byte_array_sized_new (g_variant_get_size (message) + 128);
 
-#if 0
   if G_UNLIKELY (jsonrpc_output_stream_debug)
-    g_message (">>> %s", str);
-#endif
+    {
+      g_autofree gchar *str = g_variant_print (message, TRUE);
+      g_message (">>> %s", str);
+    }
 
   if (priv->use_gvariant)
     {
@@ -329,6 +330,7 @@ jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
 
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_source_tag (task, jsonrpc_output_stream_write_message_async);
+  g_task_set_priority (task, G_PRIORITY_LOW);
 
   if (NULL == (bytes = jsonrpc_output_stream_create_bytes (self, message, &error)))
     {
