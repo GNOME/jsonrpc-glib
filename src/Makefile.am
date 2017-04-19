@@ -94,6 +94,7 @@ introspection_sources = \
 	jsonrpc-input-stream.h \
 	jsonrpc-output-stream.c \
 	jsonrpc-output-stream.h \
+	jsonrpc-version.h \
 	$(NULL)
 
 Jsonrpc-@API_VERSION@.gir: libjsonrpc-glib-@API_VERSION@.la
@@ -103,6 +104,7 @@ Jsonrpc_@API_VERSION@_gir_LIBS = libjsonrpc-glib-@API_VERSION@.la
 Jsonrpc_@API_VERSION@_gir_FILES = $(introspection_sources)
 Jsonrpc_@API_VERSION@_gir_SCANNERFLAGS = \
 	-n Jsonrpc \
+	--c-include "jsonrpc-glib.h" \
 	--identifier-prefix Jsonrpc \
 	--symbol-prefix jsonrpc \
 	-DJSONRPC_GLIB_COMPILATION \
