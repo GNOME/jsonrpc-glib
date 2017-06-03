@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"
+         xmlns:gnome="http://api.gnome.org/doap-extensions#"
+         xmlns="http://usefulinc.com/ns/doap#">
+
+  <name>Jsonrpc-GLib</name>
+  <shortname>jsonrpc-glib</shortname>
+  <shortdesc>A JSON-RPC library for GLib</shortdesc>
+  <description>Jsonrpc-GLib is a JSON-RPC library for GLib. It includes support for communicating as both a JSON-RPC client and server. Additionally, it supports upgrating connections to use GVariant for less runtime overhead.</description>
+  <homepage rdf:resource="https://wiki.gnome.org/Apps/Builder" />
+  <download-page rdf:resource="http://download.gnome.org/sources/jsonrpc-glib/" />
+
+  <programming-language>C</programming-language>
+
+  <maintainer>
+    <foaf:Person>
+      <foaf:name>Christian Hergert</foaf:name>
+      <foaf:mbox rdf:resource="mailto:chergert@gnome.org" />
+      <gnome:userid>chergert</gnome:userid>
+    </foaf:Person>
+  </maintainer>
+
+</Project>
