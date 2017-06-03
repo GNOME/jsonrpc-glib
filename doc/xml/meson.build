@@ -1,7 +1,7 @@
 ent_conf = configuration_data()
 ent_conf.set('PACKAGE', 'Jsonrpc-GLib')
 ent_conf.set('PACKAGE_BUGREPORT', 'https://bugzilla.gnome.org/enter_bug.cgi?product=jsonrpc-glib')
-ent_conf.set('PACKAGE_NAME', 'Template-GLib')
+ent_conf.set('PACKAGE_NAME', 'Jsonrpc-GLib')
 ent_conf.set('PACKAGE_STRING', 'jsonrpc-glib')
 ent_conf.set('PACKAGE_TARNAME', 'jsonrpc-glib-' + meson.project_version())
 ent_conf.set('PACKAGE_URL', 'http://wiki.gnome.org/Apps/Builder')

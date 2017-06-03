@@ -2,6 +2,7 @@ subdir('xml')
 
 private_headers = [
   'config.h',
+  'jsonrpc-glib.h',
   'jsonrpc-version.h',
 ]
 
@@ -22,7 +23,7 @@ gnome.gtkdoc('jsonrpc-glib',
   gobject_typesfile: 'jsonrpc-glib.types',
           scan_args: [
             '--rebuild-types',
-            '--ignore-decorators=_TMPL_EXTERN',
+            '--ignore-decorators=_JSONRPC_EXTERN',
             '--ignore-headers=' + ' '.join(private_headers),
           ],
 
