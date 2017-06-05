@@ -3,7 +3,7 @@
 
 #include "jsonrpc-client.h"
 
-static JsonrpcClient *client;
+static JsonrpcClient *gClient;
 static GMainLoop *main_loop;
 
 static void
@@ -17,7 +17,7 @@ close_cb (GObject      *object,
 static gboolean
 timeout_cb (gpointer data)
 {
-  jsonrpc_client_close_async (client, NULL, close_cb, NULL);
+  jsonrpc_client_close_async (gClient, NULL, close_cb, NULL);
   return G_SOURCE_REMOVE;
 }
 
@@ -73,6 +73,7 @@ main (gint   argc,
   g_autoptr(GError) error = NULL;
   g_autoptr(GSubprocess) subprocess = NULL;
   g_auto(GVariantDict) params = { 0 };
+  g_autofree gchar *path = NULL;
   GInputStream *stdout_pipe;
   GOutputStream *stdin_pipe;
 
@@ -100,27 +101,27 @@ main (gint   argc,
                             "output-stream", stdin_pipe,
                             NULL);
 
-  client = jsonrpc_client_new (io_stream);
+  gClient = jsonrpc_client_new (io_stream);
 
-  g_signal_connect (client,
+  g_signal_connect (gClient,
                     "notification",
                     G_CALLBACK (notification_cb),
                     NULL);
 
   g_subprocess_wait_async (subprocess, NULL, wait_cb, NULL);
 
-  g_autofree gchar *path = g_build_filename (g_get_home_dir (),
-                                             "Projects",
-                                             "rustls",
-                                             "sample_project",
-                                             NULL);
+  path = g_build_filename (g_get_home_dir (),
+                           "Projects",
+                           "rustls",
+                           "sample_project",
+                           NULL);
 
   g_variant_dict_init (&params, NULL);
   g_variant_dict_insert (&params, "processId", "i", getpid ());
   g_variant_dict_insert (&params, "rootPath", "s", path);
   g_variant_dict_insert_value (&params, "capabilities", g_variant_new ("a{sv}", NULL, NULL, NULL));
 
-  jsonrpc_client_call_async (client, "initialize", g_variant_dict_end (&params), NULL, call_cb, NULL);
+  jsonrpc_client_call_async (gClient, "initialize", g_variant_dict_end (&params), NULL, call_cb, NULL);
 
   g_timeout_add_seconds (5, timeout_cb, NULL);
 
