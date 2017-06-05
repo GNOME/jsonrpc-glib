@@ -11,3 +11,6 @@ option('enable-gtk-doc',
        type: 'boolean', value: false,
        description: 'Whether to generate the API reference for Jsonrpc-GLib')
 
+option('enable-tests',
+       type: 'boolean', value: true,
+       description: 'Whether to compile unit tests')
