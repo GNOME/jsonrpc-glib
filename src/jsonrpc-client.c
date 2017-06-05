@@ -550,7 +550,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
       /* Handle jsonrpc_client_close() conditions gracefully. */
       if (priv->in_shutdown && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
         {
-          g_input_stream_close (G_INPUT_STREAM (stream), NULL, NULL);
+          g_io_stream_close (priv->io_stream, NULL, NULL);
           return;
         }
 
@@ -1095,6 +1095,7 @@ jsonrpc_client_close (JsonrpcClient  *self,
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GHashTable) invocations = NULL;
+  g_autoptr(GError) close_error = NULL;
 
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
@@ -1107,13 +1108,8 @@ jsonrpc_client_close (JsonrpcClient  *self,
   if (!g_cancellable_is_cancelled (priv->read_loop_cancellable))
     g_cancellable_cancel (priv->read_loop_cancellable);
 
-  if (!g_output_stream_is_closed (G_OUTPUT_STREAM (priv->output_stream)))
-    {
-      g_autoptr(GError) output_error = NULL;
-
-      if (!g_output_stream_close (G_OUTPUT_STREAM (priv->output_stream), cancellable, &output_error))
-        g_warning ("Error closing output stream: %s", output_error->message);
-    }
+  if (!g_io_stream_close (priv->io_stream, cancellable, &close_error))
+    g_warning ("%s", close_error->message);
 
   /*
    * Closing the input stream will fail, so just rely on the callback
