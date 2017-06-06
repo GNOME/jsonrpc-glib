@@ -540,7 +540,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GVariant) message = NULL;
   g_autoptr(GError) error = NULL;
-  g_auto(GVariantDict) dict = { 0 };
+  g_auto(GVariantDict) dict = {{{ 0 }}};
 
   g_assert (JSONRPC_IS_INPUT_STREAM (stream));
   g_assert (JSONRPC_IS_CLIENT (self));
@@ -689,7 +689,6 @@ jsonrpc_client_call_read_cb (GObject      *object,
   if (g_variant_dict_contains (&dict, "id") &&
       g_variant_dict_contains (&dict, "error"))
     {
-      g_auto(GVariantDict) error_dict = { 0 };
       g_autoptr(GVariant) error_variant = NULL;
       g_autofree gchar *errstr = NULL;
       gint64 id = -1;
