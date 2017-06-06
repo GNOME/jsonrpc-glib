@@ -1,0 +1,21 @@
+==============
+Version 3.25.2
+==============
+
+This is the first release of jsonrpc-glib.
+
+This is an early project, but things seem to be working well so it's time for a
+release.  You can use jsonrpc-glib to create both JSON RPC clients and servers.
+Additionally, it supports connection upgrades to GVariant when both sides
+support it instead of JSON to reduce parser overhead and lesson the chances of
+memory fragmentation.
+
+Things to note
+
+ • Initial release of jsonrpc-glib.
+ • We'll follow the GNOME release cycle.
+ • You JsonrpcClient and JsonrpcServer should handle most of what you need
+ • See jsonrpc-message.h for a convenient va_args based C API.
+
+Thanks!
+ 
