@@ -31,85 +31,85 @@ typedef struct
 typedef struct
 {
   JsonrpcMessageMagic magic;
-} JsonrpcMessageAny;
+} JsonrpcMessageAny __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   const char *val;
-} JsonrpcMessagePutString;
+} JsonrpcMessagePutString __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   const char **valptr;
-} JsonrpcMessageGetString;
+} JsonrpcMessageGetString __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   gint32 val;
-} JsonrpcMessagePutInt32;
+} JsonrpcMessagePutInt32 __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   gint32 *valptr;
-} JsonrpcMessageGetInt32;
+} JsonrpcMessageGetInt32 __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   gint64 val;
-} JsonrpcMessagePutInt64;
+} JsonrpcMessagePutInt64 __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   gint64 *valptr;
-} JsonrpcMessageGetInt64;
+} JsonrpcMessageGetInt64 __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   gboolean val;
-} JsonrpcMessagePutBoolean;
+} JsonrpcMessagePutBoolean __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   gboolean *valptr;
-} JsonrpcMessageGetBoolean;
+} JsonrpcMessageGetBoolean __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   double val;
-} JsonrpcMessagePutDouble;
+} JsonrpcMessagePutDouble __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   double *valptr;
-} JsonrpcMessageGetDouble;
+} JsonrpcMessageGetDouble __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   GVariantIter **iterptr;
-} JsonrpcMessageGetIter;
+} JsonrpcMessageGetIter __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   GVariantDict **dictptr;
-} JsonrpcMessageGetDict;
+} JsonrpcMessageGetDict __attribute__((aligned (8)));
 
 typedef struct
 {
   JsonrpcMessageMagic magic;
   GVariant **variantptr;
-} JsonrpcMessageGetVariant;
+} JsonrpcMessageGetVariant __attribute__((aligned (8)));
 
 #define _JSONRPC_MAGIC(s) ("@!^%" s)
 #define _JSONRPC_MAGIC_C(a,b,c,d) {'@','!','^','%',a,b,c,d}
