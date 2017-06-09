@@ -86,8 +86,12 @@ add_project_arguments(
 package_subdir = get_option('package_subdir')
 girdir = join_paths(get_option('datadir'), package_subdir, 'gir-1.0')
 typelibdir = join_paths(get_option('libdir'), package_subdir, 'girepository-1.0')
-vapidir = join_paths(get_option('datadir'), package_subdir, 'vala', 'vapi')
 libdir = join_paths(get_option('libdir'), package_subdir)
+if package_subdir != ''
+  vapidir = join_paths(get_option('datadir'), package_subdir, 'vapi')
+else
+  vapidir = join_paths(get_option('datadir'), 'vala', 'vapi')
+endif
 
 gnome = import('gnome')
 
