@@ -14,3 +14,8 @@ option('enable-gtk-doc',
 option('enable-tests',
        type: 'boolean', value: true,
        description: 'Whether to compile unit tests')
+
+# For subproject usage
+option('package_subdir', type: 'string',
+  description: 'Private sub-directory used when built as a subproject'
+)

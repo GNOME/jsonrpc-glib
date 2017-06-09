@@ -1,4 +1,4 @@
-libjsonrpc_glib_header_subdir = 'jsonrpc-glib-' + apiversion
+libjsonrpc_glib_header_subdir = join_paths(package_subdir, 'jsonrpc-glib-' + apiversion)
 libjsonrpc_glib_header_dir = join_paths(get_option('includedir'), libjsonrpc_glib_header_subdir)
 
 version_data = configuration_data()
@@ -59,6 +59,7 @@ libjsonrpc_glib = library(
      soversion: soversion,
        version: libversion,
        install: true,
+   install_dir: libdir,
 )
 
 libjsonrpc_glib_dep = declare_dependency(
@@ -102,11 +103,12 @@ pkgg = import('pkgconfig')
 
 pkgg.generate(
     libraries: [libjsonrpc_glib],
-      subdirs: 'jsonrpc-glib-@0@'.format(apiversion),
+      subdirs: libjsonrpc_glib_header_subdir,
       version: meson.project_version(),
          name: 'Jsonrpc-GLib',
      filebase: 'jsonrpc-glib-@0@'.format(apiversion),
   description: 'A jsonrpc library for GLib',
      requires: [ 'gio-2.0', 'json-glib-1.0' ],
+  install_dir: join_paths(libdir, 'pkgconfig'),
 )
 
