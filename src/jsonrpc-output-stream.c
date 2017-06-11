@@ -25,8 +25,8 @@
 
 /**
  * SECTION:jsonrpc-output-stream
- * @title: #JsonrpcOutputStream
- * @short_description: A JSONRPC output stream
+ * @title: JsonrpcOutputStream
+ * @short_description: A JSON-RPC output stream
  *
  * The #JsonrpcOutputStream is resonsible for serializing messages onto
  * the underlying stream.

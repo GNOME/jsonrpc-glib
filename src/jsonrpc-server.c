@@ -22,6 +22,16 @@
 #include "jsonrpc-output-stream.h"
 #include "jsonrpc-server.h"
 
+/**
+ * SECTION:jsonrpc-server
+ * @title: JsonrpcServer
+ * @short_description: A server for JSON-RPC communication
+ *
+ * The #JsonrpcServer class can help you implement a JSON-RPC server. You can
+ * accept connections and then communicate with clients using the
+ * #JsonrpcClient API.
+ */
+
 typedef struct
 {
   GHashTable *clients;

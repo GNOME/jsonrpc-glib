@@ -29,7 +29,6 @@ call_cb (GObject      *object,
   JsonrpcClient *client = (JsonrpcClient *)object;
   g_autoptr(GError) error = NULL;
   g_autoptr(GVariant) return_value = NULL;
-  g_autofree gchar *str = NULL;
 
   g_assert (JSONRPC_IS_CLIENT (client));
   g_assert (G_IS_ASYNC_RESULT (result));
