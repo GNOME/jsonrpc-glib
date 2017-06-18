@@ -2,10 +2,10 @@ libjsonrpc_glib_header_subdir = join_paths(package_subdir, 'jsonrpc-glib-' + api
 libjsonrpc_glib_header_dir = join_paths(get_option('includedir'), libjsonrpc_glib_header_subdir)
 
 version_data = configuration_data()
-version_data.set('JSONRPC_MAJOR_VERSION', jsonrpc_glib_version_major)
-version_data.set('JSONRPC_MINOR_VERSION', jsonrpc_glib_version_minor)
-version_data.set('JSONRPC_MICRO_VERSION', jsonrpc_glib_version_micro)
-version_data.set('JSONRPC_VERSION', meson.project_version())
+version_data.set('MAJOR_VERSION', jsonrpc_glib_version_major)
+version_data.set('MINOR_VERSION', jsonrpc_glib_version_minor)
+version_data.set('MICRO_VERSION', jsonrpc_glib_version_micro)
+version_data.set('VERSION', meson.project_version())
 
 jsonrpc_version_h = configure_file(
           input: 'jsonrpc-version.h.in',
