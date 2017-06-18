@@ -6,11 +6,11 @@ option('enable_profiling', type: 'boolean', value: false)
 option('with_introspection', type: 'boolean', value: true)
 option('with_vapi', type: 'boolean', value: true)
 
-option('enable-gtk-doc',
+option('enable_gtk_doc',
        type: 'boolean', value: false,
        description: 'Whether to generate the API reference for Jsonrpc-GLib')
 
-option('enable-tests',
+option('enable_tests',
        type: 'boolean', value: true,
        description: 'Whether to compile unit tests')
 

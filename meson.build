@@ -98,6 +98,6 @@ gnome = import('gnome')
 subdir('src')
 subdir('tests')
 
-if get_option('enable-gtk-doc')
+if get_option('enable_gtk_doc')
   subdir('doc')
 endif
