@@ -55,7 +55,7 @@ handle_call (JsonrpcServer *server,
 {
   const gchar *rootPath = NULL;
   g_autoptr(GError) error = NULL;
-  g_auto(GVariantDict) dict = { 0 };
+  g_auto(GVariantDict) dict = {{{0}}};
   gboolean r;
 
   g_assert (id != NULL);
@@ -82,6 +82,30 @@ handle_call (JsonrpcServer *server,
 }
 
 static void
+do_something_handler (JsonrpcServer *server,
+                      JsonrpcClient *client,
+                      const gchar   *method,
+                      GVariant      *id,
+                      GVariant      *params,
+                      gpointer       user_data)
+{
+  g_autoptr(GError) error = NULL;
+  gint *count = user_data;
+  gboolean r;
+
+  g_assert_cmpstr (method, ==, "do/something");
+
+  (*count)++;
+
+  g_assert (g_variant_is_of_type (params, G_VARIANT_TYPE_STRING));
+  g_assert_cmpstr (g_variant_get_string (params, NULL), ==, "do/something/message");
+
+  r = jsonrpc_client_reply (client, id, g_variant_new_boolean (TRUE), NULL, &error);
+  g_assert_no_error (error);
+  g_assert (r);
+}
+
+static void
 test_basic (gboolean use_gvariant)
 {
   g_autoptr(JsonrpcServer) server = NULL;
@@ -96,6 +120,8 @@ test_basic (gboolean use_gvariant)
   g_autoptr(GVariant) return_value = NULL;
   g_autoptr(GError) error = NULL;
   GVariantDict dict;
+  guint handler_id;
+  gulong handle_call_id;
   gint pair_a[2];
   gint pair_b[2];
   gint count = 0;
@@ -125,10 +151,10 @@ test_basic (gboolean use_gvariant)
   server = jsonrpc_server_new ();
   jsonrpc_server_accept_io_stream (server, stream_b);
 
-  g_signal_connect (server,
-                    "handle-call",
-                    G_CALLBACK (handle_call),
-                    NULL);
+  handle_call_id = g_signal_connect (server,
+                                     "handle-call",
+                                     G_CALLBACK (handle_call),
+                                     NULL);
 
   g_signal_connect (server,
                     "notification",
@@ -154,6 +180,30 @@ test_basic (gboolean use_gvariant)
   g_assert (return_value != NULL);
 
   g_assert_cmpint (count, ==, 1);
+
+  g_signal_handler_disconnect (server, handle_call_id);
+
+  handler_id = jsonrpc_server_add_handler (server,
+                                           "do/something",
+                                           do_something_handler,
+                                           &count,
+                                           NULL);
+
+  message = g_variant_new_string ("do/something/message");
+
+  r = jsonrpc_client_call (client,
+                           "do/something",
+                           g_steal_pointer (&message),
+                           NULL,
+                           &return_value,
+                           &error);
+  g_assert_no_error (error);
+  g_assert_cmpint (r, ==, TRUE);
+  g_assert (return_value != NULL);
+
+  g_assert_cmpint (count, ==, 2);
+
+  jsonrpc_server_remove_handler (server, handler_id);
 }
 
 static void

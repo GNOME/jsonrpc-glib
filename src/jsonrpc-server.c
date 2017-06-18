@@ -18,6 +18,8 @@
 
 #define G_LOG_DOMAIN "jsonrpc-server"
 
+#include <stdlib.h>
+
 #include "jsonrpc-input-stream.h"
 #include "jsonrpc-output-stream.h"
 #include "jsonrpc-server.h"
@@ -35,7 +37,18 @@
 typedef struct
 {
   GHashTable *clients;
+  GArray     *handlers;
+  guint       last_handler_id;
 } JsonrpcServerPrivate;
+
+typedef struct
+{
+  const gchar          *method;
+  JsonrpcServerHandler  handler;
+  gpointer              handler_data;
+  GDestroyNotify        handler_data_destroy;
+  guint                 handler_id;
+} JsonrpcServerHandlerData;
 
 G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcServer, jsonrpc_server, G_TYPE_OBJECT)
 
@@ -48,12 +61,58 @@ enum {
 static guint signals [N_SIGNALS];
 
 static void
+jsonrpc_server_clear_handler_data (JsonrpcServerHandlerData *data)
+{
+  if (data->handler_data_destroy)
+    data->handler_data_destroy (data->handler_data);
+}
+
+static gint
+locate_handler_by_method (const void *key,
+                          const void *element)
+{
+  const gchar *method = key;
+  const JsonrpcServerHandlerData *data = element;
+
+  return g_strcmp0 (method, data->method);
+}
+
+static gboolean
+jsonrpc_server_real_handle_call (JsonrpcServer *self,
+                                 JsonrpcClient *client,
+                                 const gchar   *method,
+                                 GVariant      *id,
+                                 GVariant      *params)
+{
+  JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
+  JsonrpcServerHandlerData *data;
+
+  g_assert (JSONRPC_IS_SERVER (self));
+  g_assert (JSONRPC_IS_CLIENT (client));
+  g_assert (method != NULL);
+  g_assert (id != NULL);
+
+  data = bsearch (method, (gpointer)priv->handlers->data,
+                  priv->handlers->len, sizeof (JsonrpcServerHandlerData),
+                  locate_handler_by_method);
+
+  if (data != NULL)
+    {
+      data->handler (self, client, method, id, params, data->handler_data);
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+static void
 jsonrpc_server_finalize (GObject *object)
 {
   JsonrpcServer *self = (JsonrpcServer *)object;
   JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
 
   g_clear_pointer (&priv->clients, g_hash_table_unref);
+  g_clear_pointer (&priv->handlers, g_array_unref);
 
   G_OBJECT_CLASS (jsonrpc_server_parent_class)->finalize (object);
 }
@@ -65,12 +124,14 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
 
   object_class->finalize = jsonrpc_server_finalize;
 
+  klass->handle_call = jsonrpc_server_real_handle_call;
+
   signals [HANDLE_CALL] =
     g_signal_new ("handle-call",
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcServerClass, handle_call),
-                  NULL, NULL, NULL,
+                  g_signal_accumulator_true_handled, NULL, NULL,
                   G_TYPE_BOOLEAN,
                   4,
                   JSONRPC_TYPE_CLIENT,
@@ -97,6 +158,9 @@ jsonrpc_server_init (JsonrpcServer *self)
   JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
 
   priv->clients = g_hash_table_new_full (NULL, NULL, g_object_unref, NULL);
+
+  priv->handlers = g_array_new (FALSE, FALSE, sizeof (JsonrpcServerHandlerData));
+  g_array_set_clear_func (priv->handlers, (GDestroyNotify)jsonrpc_server_clear_handler_data);
 }
 
 JsonrpcServer *
@@ -166,4 +230,81 @@ jsonrpc_server_accept_io_stream (JsonrpcServer *self,
   g_hash_table_insert (priv->clients, client, NULL);
 
   jsonrpc_client_start_listening (client);
+}
+
+static gint
+sort_by_method (gconstpointer a,
+                gconstpointer b)
+{
+  const JsonrpcServerHandlerData *data_a = a;
+  const JsonrpcServerHandlerData *data_b = b;
+
+  return g_strcmp0 (data_a->method, data_b->method);
+}
+
+/**
+ * jsonrpc_server_add_handler:
+ * @self: A #JsonrpcServer
+ * @method: A method to handle
+ * @handler: (closure handler_data) (destroy handler_data_destroy): A handler to
+ *   execute when an incoming method matches @methods
+ * @handler_data: user data for @handler
+ * @handler_data_destroy: a destroy callback for @handler_data
+ *
+ * Adds a new handler that will be dispatched when a matching @method arrives.
+ *
+ * Returns: A handler id that can be used to remove the handler with
+ *   jsonrpc_server_remove_handler().
+ */
+guint
+jsonrpc_server_add_handler (JsonrpcServer        *self,
+                            const gchar          *method,
+                            JsonrpcServerHandler  handler,
+                            gpointer              handler_data,
+                            GDestroyNotify        handler_data_destroy)
+{
+  JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
+  JsonrpcServerHandlerData data;
+
+  g_return_val_if_fail (JSONRPC_IS_SERVER (self), 0);
+  g_return_val_if_fail (handler != NULL, 0);
+
+  data.method = g_intern_string (method);
+  data.handler = handler;
+  data.handler_data = handler_data;
+  data.handler_data_destroy = handler_data_destroy;
+  data.handler_id = ++priv->last_handler_id;
+
+  g_array_append_val (priv->handlers, data);
+  g_array_sort (priv->handlers, sort_by_method);
+
+  return data.handler_id;
+}
+
+/**
+ * jsonrpc_server_remove_handler:
+ * @self: a #JsonrpcServer
+ * @handler_id: a handler returned from jsonrpc_server_add_handler()
+ *
+ * Removes a handler that was previously registered with jsonrpc_server_add_handler().
+ */
+void
+jsonrpc_server_remove_handler (JsonrpcServer *self,
+                               guint          handler_id)
+{
+  JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
+
+  g_return_if_fail (JSONRPC_IS_SERVER (self));
+  g_return_if_fail (handler_id != 0);
+
+  for (guint i = 0; i < priv->handlers->len; i++)
+    {
+      const JsonrpcServerHandlerData *data = &g_array_index (priv->handlers, JsonrpcServerHandlerData, i);
+
+      if (data->handler_id == handler_id)
+        {
+          g_array_remove_index (priv->handlers, i);
+          break;
+        }
+    }
 }

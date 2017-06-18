@@ -53,9 +53,23 @@ struct _JsonrpcServerClass
   gpointer _reserved8;
 };
 
+typedef void (*JsonrpcServerHandler) (JsonrpcServer *self,
+                                      JsonrpcClient *client,
+                                      const gchar   *method,
+                                      GVariant      *id,
+                                      GVariant      *params,
+                                      gpointer       user_data);
+
 JsonrpcServer *jsonrpc_server_new              (void);
-void           jsonrpc_server_accept_io_stream (JsonrpcServer *self,
-                                                GIOStream     *stream);
+void           jsonrpc_server_accept_io_stream (JsonrpcServer        *self,
+                                                GIOStream            *stream);
+guint          jsonrpc_server_add_handler      (JsonrpcServer        *self,
+                                                const gchar          *method,
+                                                JsonrpcServerHandler  handler,
+                                                gpointer              handler_data,
+                                                GDestroyNotify        handler_data_destroy);
+void           jsonrpc_server_remove_handler   (JsonrpcServer        *self,
+                                                guint                 handler_id);
 
 G_END_DECLS
 
