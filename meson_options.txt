@@ -1,6 +1,5 @@
 
 # Performance and debugging related options
-option('enable_tracing', type: 'boolean', value: false)
 option('enable_profiling', type: 'boolean', value: false)
 
 # Support for multiple languages

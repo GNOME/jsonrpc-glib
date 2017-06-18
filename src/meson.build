@@ -6,7 +6,6 @@ version_data.set('JSONRPC_MAJOR_VERSION', jsonrpc_glib_version_major)
 version_data.set('JSONRPC_MINOR_VERSION', jsonrpc_glib_version_minor)
 version_data.set('JSONRPC_MICRO_VERSION', jsonrpc_glib_version_micro)
 version_data.set('JSONRPC_VERSION', meson.project_version())
-version_data.set10('ENABLE_TRACING', get_option('enable_tracing'))
 
 jsonrpc_version_h = configure_file(
           input: 'jsonrpc-version.h.in',
