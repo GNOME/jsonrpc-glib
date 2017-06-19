@@ -62,7 +62,7 @@ typedef void (*JsonrpcServerHandler) (JsonrpcServer *self,
 
 JsonrpcServer *jsonrpc_server_new              (void);
 void           jsonrpc_server_accept_io_stream (JsonrpcServer        *self,
-                                                GIOStream            *stream);
+                                                GIOStream            *io_stream);
 guint          jsonrpc_server_add_handler      (JsonrpcServer        *self,
                                                 const gchar          *method,
                                                 JsonrpcServerHandler  handler,
