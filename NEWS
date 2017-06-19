@@ -1,4 +1,22 @@
 ==============
+Version 3.25.3
+==============
+
+This new release of jsonrpc-glib contains a few fixes and additions.
+
+ • Support for gtk-doc based documentation has been added. Use
+   -Denable_gtk_doc=true to enable it when configuring Meson.
+ • JsonrpcServer now supports a convenience API for handling incoming
+   methods via jsonrpc_server_add_handler() and
+   jsonrpc_server_remove_handler().
+ • Support has been added to allow jsonrpc-glib to be used as a Meson
+   subproject.
+ • jsonrpc-version.h now generates the proper values for checking
+   compile time version information.
+ • Various build options were canonicalized to use _ instead of -
+   as a word separator.
+
+==============
 Version 3.25.2
 ==============
 
