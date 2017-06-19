@@ -47,6 +47,8 @@
  * For synchronous calls, #JsonrpcClient will use the thread-default
  * #GMainContext. If you have special needs here ensure you've set the context
  * before calling into any #JsonrpcClient API.
+ *
+ * Since: 3.26
  */
 
 #include <glib.h>
@@ -372,6 +374,14 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
   object_class->get_property = jsonrpc_client_get_property;
   object_class->set_property = jsonrpc_client_set_property;
 
+  /**
+   * JsonrpcClient:io-stream:
+   *
+   * The "io-stream" property is the #GIOStream to use for communicating
+   * with a JSON-RPC peer.
+   *
+   * Since: 3.26
+   */
   properties [PROP_IO_STREAM] =
     g_param_spec_object ("io-stream",
                          "IO Stream",
@@ -379,6 +389,20 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
                          G_TYPE_IO_STREAM,
                          (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * JsonrpcClient:use-gvariant:
+   *
+   * The "use-gvariant" property denotes if #GVariant should be used to
+   * communicate with the peer instead of JSON. You should only set this
+   * if you know the peer is also a Jsonrpc-GLib based client.
+   *
+   * Setting this property allows the peers to communicate using GVariant
+   * instead of JSON. This means that we can access the messages without
+   * expensive memory allocations and parsing costs associated with JSON.
+   * #GVariant is much more optimal for memory-bassed message passing.
+   *
+   * Since: 3.26
+   */
   properties [PROP_USE_GVARIANT] =
     g_param_spec_boolean ("use-gvariant",
                           "Use GVariant",
@@ -395,14 +419,16 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
    * @id: (not nullable): The "id" field of the JSONRPC message
    * @params: (nullable): The "params" field of the JSONRPC message
    *
-   * This signal is emitted when an RPC has been received from
-   * the peer we are connected to. Return %TRUE if you have handled
-   * this message, even asynchronously. If no handler has returned
-   * %TRUE an error will be synthesized.
+   * This signal is emitted when an RPC has been received from the peer we
+   * are connected to. Return %TRUE if you have handled this message, even
+   * asynchronously. If no handler has returned %TRUE an error will be
+   * synthesized.
    *
-   * If you handle the message, you are responsible for replying to
-   * the peer in a timely manner using jsonrpc_client_reply() or
+   * If you handle the message, you are responsible for replying to the peer
+   * in a timely manner using jsonrpc_client_reply() or
    * jsonrpc_client_reply_async().
+   *
+   * Since: 3.26
    */
   signals [HANDLE_CALL] =
     g_signal_new ("handle-call",
@@ -422,10 +448,12 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
    * @method: the method name of the notification
    * @params: (nullable): params for the notification
    *
-   * This signal is emitted when a notification has been received
-   * from a peer. Unlike #JsonrpcClient::handle-call, this does
-   * not have an "id" parameter because notifications do not have
-   * ids. They do not round trip.
+   * This signal is emitted when a notification has been received from a
+   * peer.  Unlike #JsonrpcClient::handle-call, this does not have an "id"
+   * parameter because notifications do not have ids. They do not round
+   * trip.
+   *
+   * Since: 3.26
    */
   signals [NOTIFICATION] =
     g_signal_new ("notification",
@@ -460,6 +488,8 @@ jsonrpc_client_init (JsonrpcClient *self)
  * g_subprocess_get_stdin_pipe() and g_subprocess_get_stdout_pipe().
  *
  * Returns: (transfer full): A newly created #JsonrpcClient
+ *
+ * Since: 3.26
  */
 JsonrpcClient *
 jsonrpc_client_new (GIOStream *io_stream)
@@ -763,7 +793,9 @@ jsonrpc_client_call_sync_cb (GObject      *object,
  *
  * If @params is floating then this function consumes the reference.
  *
- * Returns; %TRUE on success; otherwise %FALSE and @error is set.
+ * Returns: %TRUE on success; otherwise %FALSE and @error is set.
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_call (JsonrpcClient  *self,
@@ -822,6 +854,8 @@ jsonrpc_client_call (JsonrpcClient  *self,
  * Upon completion or failure, @callback is executed and it should
  * call jsonrpc_client_call_finish() to complete the request and release
  * any memory held.
+ *
+ * Since: 3.26
  */
 void
 jsonrpc_client_call_async (JsonrpcClient       *self,
@@ -895,6 +929,8 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
  * Completes an asynchronous call to jsonrpc_client_call_async().
  *
  * Returns: %TRUE if successful and @return_value is set, otherwise %FALSE and @error is set.
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_call_finish (JsonrpcClient  *self,
@@ -954,7 +990,9 @@ jsonrpc_client_send_notification_write_cb (GObject      *object,
  *
  * This function takes ownership of @params.
  *
- * Returns; %TRUE on success; otherwise %FALSE and @error is set.
+ * Returns: %TRUE on success; otherwise %FALSE and @error is set.
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_send_notification (JsonrpcClient  *self,
@@ -1006,6 +1044,8 @@ jsonrpc_client_send_notification (JsonrpcClient  *self,
  * not indicate that the peer has received them.
  *
  * If @params is floating then the reference is consumed.
+ *
+ * Since: 3.26
  */
 void
 jsonrpc_client_send_notification_async (JsonrpcClient       *self,
@@ -1062,6 +1102,8 @@ jsonrpc_client_send_notification_async (JsonrpcClient       *self,
  *
  * Returns: %TRUE if the bytes have been flushed to the #GIOStream; otherwise
  *   %FALSE and @error is set.
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_send_notification_finish (JsonrpcClient  *self,
@@ -1086,6 +1128,8 @@ jsonrpc_client_send_notification_finish (JsonrpcClient  *self,
  * Failure to call this method results in a leak of #JsonrpcClient.
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_close (JsonrpcClient  *self,
@@ -1144,6 +1188,8 @@ jsonrpc_client_close (JsonrpcClient  *self,
  *
  * Currently this operation is implemented synchronously, but in the future may
  * be converted to using asynchronous operations.
+ *
+ * Since: 3.26
  */
 void
 jsonrpc_client_close_async (JsonrpcClient       *self,
@@ -1176,6 +1222,8 @@ jsonrpc_client_close_async (JsonrpcClient       *self,
  * Completes an asynchronous request of jsonrpc_client_close_async().
  *
  * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_close_finish (JsonrpcClient  *self,
@@ -1194,6 +1242,8 @@ jsonrpc_client_close_finish (JsonrpcClient  *self,
  * result: (transfer none) (nullable): the return value or %NULL
  *
  * Synchronous variant of jsonrpc_client_reply_async().
+ *
+ * Since: 3.26
  */
 gboolean
 jsonrpc_client_reply (JsonrpcClient  *self,
@@ -1267,6 +1317,8 @@ jsonrpc_client_reply_cb (GObject      *object,
  * that since the peer does not reply to replies, completion of this
  * asynchronous message does not indicate that the peer has received
  * the message.
+ *
+ * Since: 3.26
  */
 void
 jsonrpc_client_reply_async (JsonrpcClient       *self,
@@ -1311,6 +1363,18 @@ jsonrpc_client_reply_async (JsonrpcClient       *self,
                                              g_steal_pointer (&task));
 }
 
+/**
+ * jsonrpc_client_reply_finish:
+ * @self: a #JsonrpcClient
+ * @result: A #GAsyncResult
+ * @error: a location for a #GError or %NULL
+ *
+ * Completes an asynchronous request to jsonrpc_client_reply_async().
+ *
+ * Returns: %TRUE if successful; otherwise %FALSE and @error is set.
+ *
+ * Since: 3.26
+ */
 gboolean
 jsonrpc_client_reply_finish (JsonrpcClient  *self,
                              GAsyncResult   *result,
@@ -1322,6 +1386,15 @@ jsonrpc_client_reply_finish (JsonrpcClient  *self,
   return g_task_propagate_boolean (G_TASK (result), error);
 }
 
+/**
+ * jsonrpc_client_start_listening:
+ * @self: a #JsonrpcClient
+ *
+ * This function requests that client start processing incoming
+ * messages from the peer.
+ *
+ * Since: 3.26
+ */
 void
 jsonrpc_client_start_listening (JsonrpcClient *self)
 {
@@ -1352,6 +1425,18 @@ jsonrpc_client_start_listening (JsonrpcClient *self)
     }
 }
 
+/**
+ * jsonrpc_client_get_use_gvariant:
+ * @self: a #JsonrpcClient
+ *
+ * Gets the #JsonrpcClient:use-gvariant property.
+ *
+ * Indicates if #GVariant is being used to communicate with the peer.
+ *
+ * Returns: %TRUE if #GVariant is being used; otherwise %FALSE.
+ *
+ * Since: 3.26
+ */
 gboolean
 jsonrpc_client_get_use_gvariant (JsonrpcClient *self)
 {
@@ -1362,6 +1447,20 @@ jsonrpc_client_get_use_gvariant (JsonrpcClient *self)
   return priv->use_gvariant;
 }
 
+/**
+ * jsonrpc_client_set_use_gvariant:
+ * @self: a #JsonrpcClient
+ * @use_gvariant: if #GVariant should be used
+ *
+ * Sets the #JsonrpcClient:use-gvariant property.
+ *
+ * This function sets if #GVariant should be used to communicate with the
+ * peer. Doing so can allow for more efficient communication by avoiding
+ * expensive parsing overhead and memory allocations. However, it requires
+ * that the peer also supports #GVariant encoding.
+ *
+ * Since: 3.26
+ */
 void
 jsonrpc_client_set_use_gvariant (JsonrpcClient *self,
                                  gboolean       use_gvariant)

@@ -126,6 +126,23 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
 
   klass->handle_call = jsonrpc_server_real_handle_call;
 
+  /**
+   * JsonrpcServer::handle-call:
+   * @self: a #JsonrpcServer
+   * @client: a #JsonrpcClient
+   * @method: the method that was called
+   * @id: the identifier of the method call
+   * @params: the parameters of the method call
+   *
+   * This method is emitted when the client requests a method call.
+   *
+   * If you return %TRUE from this function, you should reply to it (even upon
+   * failure), using jsonrpc_client_reply() or jsonrpc_client_reply_async().
+   *
+   * Returns: %TRUE if the request was handled.
+   *
+   * Since: 3.26
+   */
   signals [HANDLE_CALL] =
     g_signal_new ("handle-call",
                   G_TYPE_FROM_CLASS (klass),
@@ -139,6 +156,17 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_TYPE_VARIANT,
                   G_TYPE_VARIANT);
 
+  /**
+   * JsonrpcServer::notification:
+   * @self: A #JsonrpcServer
+   * @client: A #JsonrpcClient
+   * @method: the notification name
+   * @id: the params for the notification
+   *
+   * This signal is emitted when the client has sent a notification to us.
+   *
+   * Since: 3.26
+   */
   signals [NOTIFICATION] =
     g_signal_new ("notification",
                   G_TYPE_FROM_CLASS (klass),
@@ -163,6 +191,15 @@ jsonrpc_server_init (JsonrpcServer *self)
   g_array_set_clear_func (priv->handlers, (GDestroyNotify)jsonrpc_server_clear_handler_data);
 }
 
+/**
+ * jsonrpc_server_new:
+ *
+ * Creates a new #JsonrpcServer.
+ *
+ * Returns: (transfer full): A newly created #JsonrpcServer instance.
+ *
+ * Since: 3.26
+ */
 JsonrpcServer *
 jsonrpc_server_new (void)
 {
@@ -203,6 +240,17 @@ jsonrpc_server_client_notification (JsonrpcServer *self,
   g_signal_emit (self, signals [NOTIFICATION], 0, client, method, params);
 }
 
+/**
+ * jsonrpc_server_accept_io_stream:
+ * @self: a #JsonrpcServer
+ * @io_stream: A #GIOStream
+ *
+ * This function accepts @io_stream as a new client to the #JsonrpcServer
+ * by wrapping it in a #JsonrpcClient and starting the message accept
+ * loop.
+ *
+ * Since: 3.26
+ */
 void
 jsonrpc_server_accept_io_stream (JsonrpcServer *self,
                                  GIOStream     *io_stream)
@@ -255,6 +303,8 @@ sort_by_method (gconstpointer a,
  *
  * Returns: A handler id that can be used to remove the handler with
  *   jsonrpc_server_remove_handler().
+ *
+ * Since: 3.26
  */
 guint
 jsonrpc_server_add_handler (JsonrpcServer        *self,
@@ -287,6 +337,8 @@ jsonrpc_server_add_handler (JsonrpcServer        *self,
  * @handler_id: a handler returned from jsonrpc_server_add_handler()
  *
  * Removes a handler that was previously registered with jsonrpc_server_add_handler().
+ *
+ * Since: 3.26
  */
 void
 jsonrpc_server_remove_handler (JsonrpcServer *self,
