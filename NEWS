@@ -1,3 +1,11 @@
+==============
+Version 3.26.0
+==============
+
+Changes in this release:
+
+ • Run test suite as part of build tooling
+
 ===============
 Version 3.25.92
 ===============
