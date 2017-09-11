@@ -24,6 +24,9 @@ test_deps = libjsonrpc_glib_deps + [
   dependency('gio-unix-2.0'),
 ]
 
+# Not automated, just for local testing
+# Probably should remove this anyway since test-server
+# does most of the same stuff.
 test_client = executable('test-client', 'test-client.c',
         c_args: test_cflags,
      link_args: test_link_args,
@@ -35,17 +38,20 @@ test_message = executable('test-message', 'test-message.c',
      link_args: test_link_args,
   dependencies: test_deps,
 )
+test('test-message', test_message, env: test_env)
 
 test_server = executable('test-server', 'test-server.c',
         c_args: test_cflags,
      link_args: test_link_args,
   dependencies: test_deps,
 )
+test('test-server', test_server, env: test_env)
 
 test_stress = executable('test-stress', 'test-stress.c',
         c_args: test_cflags,
      link_args: test_link_args,
   dependencies: test_deps,
 )
+test('test-stress', test_stress, env: test_env)
 
 endif
