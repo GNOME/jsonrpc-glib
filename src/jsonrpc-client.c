@@ -1152,7 +1152,7 @@ jsonrpc_client_close (JsonrpcClient  *self,
     g_cancellable_cancel (priv->read_loop_cancellable);
 
   if (!g_io_stream_close (priv->io_stream, cancellable, &close_error))
-    g_warning ("%s", close_error->message);
+    g_warning ("Failure closing stream: %s", close_error->message);
 
   /*
    * Closing the input stream will fail, so just rely on the callback
