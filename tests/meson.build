@@ -52,6 +52,5 @@ test_stress = executable('test-stress', 'test-stress.c',
      link_args: test_link_args,
   dependencies: test_deps,
 )
-test('test-stress', test_stress, env: test_env)
 
 endif
