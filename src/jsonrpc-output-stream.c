@@ -254,7 +254,8 @@ jsonrpc_output_stream_pump (JsonrpcOutputStream *self)
 
   g_assert (JSONRPC_IS_OUTPUT_STREAM (self));
 
-  if (priv->queue.length == 0)
+  if (priv->queue.length == 0 ||
+      g_output_stream_has_pending (G_OUTPUT_STREAM (self)))
     return;
 
   task = g_queue_pop_head (&priv->queue);
