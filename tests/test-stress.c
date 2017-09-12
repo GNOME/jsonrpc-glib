@@ -65,9 +65,10 @@ server_handle_reply_cb (JsonrpcClient *client,
   if (n_ops == 0)
     {
       LOG ("server: closing client stream");
-      r = jsonrpc_client_close (client, NULL, &error);
-      g_assert_no_error (error);
-      g_assert_cmpint (r, ==, 1);
+      /* Close might error, but the tasks are always
+       * flushed and cancelled.
+       */
+      jsonrpc_client_close (client, NULL, NULL);
     }
 }
 

@@ -1138,7 +1138,7 @@ jsonrpc_client_close (JsonrpcClient  *self,
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GHashTable) invocations = NULL;
-  g_autoptr(GError) close_error = NULL;
+  gboolean ret;
 
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
   g_return_val_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable), FALSE);
@@ -1151,8 +1151,10 @@ jsonrpc_client_close (JsonrpcClient  *self,
   if (!g_cancellable_is_cancelled (priv->read_loop_cancellable))
     g_cancellable_cancel (priv->read_loop_cancellable);
 
-  if (!g_io_stream_close (priv->io_stream, cancellable, &close_error))
-    g_warning ("Failure closing stream: %s", close_error->message);
+  /* This can fail from "pending operations", but we will always cancel
+   * our tasks. But we should let the caller know either way.
+   */
+  ret = g_io_stream_close (priv->io_stream, cancellable, error);
 
   /*
    * Closing the input stream will fail, so just rely on the callback
@@ -1177,7 +1179,7 @@ jsonrpc_client_close (JsonrpcClient  *self,
         g_task_return_error (task, g_error_copy (local_error));
     }
 
-  return TRUE;
+  return ret;
 }
 
 /**
