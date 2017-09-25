@@ -22,6 +22,7 @@
 #include <gio/gio.h>
 
 #include "jsonrpc-client.h"
+#include "jsonrpc-version-macros.h"
 
 G_BEGIN_DECLS
 
@@ -60,14 +61,18 @@ typedef void (*JsonrpcServerHandler) (JsonrpcServer *self,
                                       GVariant      *params,
                                       gpointer       user_data);
 
+JSONRPC_AVAILABLE_IN_3_26
 JsonrpcServer *jsonrpc_server_new              (void);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_server_accept_io_stream (JsonrpcServer        *self,
                                                 GIOStream            *io_stream);
+JSONRPC_AVAILABLE_IN_3_26
 guint          jsonrpc_server_add_handler      (JsonrpcServer        *self,
                                                 const gchar          *method,
                                                 JsonrpcServerHandler  handler,
                                                 gpointer              handler_data,
                                                 GDestroyNotify        handler_data_destroy);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_server_remove_handler   (JsonrpcServer        *self,
                                                 guint                 handler_id);
 

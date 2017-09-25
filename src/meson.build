@@ -47,17 +47,10 @@ libjsonrpc_glib_sources = [
   libjsonrpc_glib_public_sources,
 ]
 
-libjsonrpc_glib_link_args = []
-if ld_supports_version_script
-libjsonrpc_glib_link_args += ['-Wl,--version-script,' + join_paths(meson.current_source_dir(), 'jsonrpc-glib.map')]
-endif
-
 libjsonrpc_glib = library(
   'jsonrpc_glib-' + apiversion,
   libjsonrpc_glib_sources,
 
-  link_depends: 'jsonrpc-glib.map',
-     link_args: libjsonrpc_glib_link_args,
   dependencies: libjsonrpc_glib_deps,
      soversion: soversion,
        version: libversion,

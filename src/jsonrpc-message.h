@@ -21,6 +21,8 @@
 
 #include <glib.h>
 
+#include "jsonrpc-version-macros.h"
+
 G_BEGIN_DECLS
 
 typedef struct
@@ -183,8 +185,13 @@ typedef struct
 #define JSONRPC_MESSAGE_GET_VARIANT(_valptr) \
   (&((JsonrpcMessageGetVariant) { .magic = {_JSONRPC_MESSAGE_GET_VARIANT_MAGIC_C}, .variantptr = _valptr }))
 
+JSONRPC_AVAILABLE_IN_3_26
 GVariant *jsonrpc_message_new         (gpointer first_param, ...) G_GNUC_NULL_TERMINATED;
+
+JSONRPC_AVAILABLE_IN_3_26
 gboolean  jsonrpc_message_parse       (GVariant *message, ...) G_GNUC_NULL_TERMINATED;
+
+JSONRPC_AVAILABLE_IN_3_26
 gboolean  jsonrpc_message_parse_array (GVariantIter *iter, ...) G_GNUC_NULL_TERMINATED;
 
 G_END_DECLS

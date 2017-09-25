@@ -21,6 +21,8 @@
 
 #include <gio/gio.h>
 
+#include "jsonrpc-version-macros.h"
+
 G_BEGIN_DECLS
 
 #define JSONRPC_TYPE_CLIENT  (jsonrpc_client_get_type())
@@ -50,65 +52,82 @@ struct _JsonrpcClientClass
   gpointer _reserved8;
 };
 
+JSONRPC_AVAILABLE_IN_3_26
 GQuark         jsonrpc_client_error_quark              (void);
+JSONRPC_AVAILABLE_IN_3_26
 JsonrpcClient *jsonrpc_client_new                      (GIOStream            *io_stream);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_get_use_gvariant         (JsonrpcClient        *self);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_set_use_gvariant         (JsonrpcClient        *self,
                                                         gboolean              use_gvariant);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_close                    (JsonrpcClient        *self,
                                                         GCancellable         *cancellable,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_close_async              (JsonrpcClient        *self,
                                                         GCancellable         *cancellable,
                                                         GAsyncReadyCallback   callback,
                                                         gpointer              user_data);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_close_finish             (JsonrpcClient        *self,
                                                         GAsyncResult         *result,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_call                     (JsonrpcClient        *self,
                                                         const gchar          *method,
                                                         GVariant             *params,
                                                         GCancellable         *cancellable,
                                                         GVariant            **return_value,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_call_async               (JsonrpcClient        *self,
                                                         const gchar          *method,
                                                         GVariant             *params,
                                                         GCancellable         *cancellable,
                                                         GAsyncReadyCallback   callback,
                                                         gpointer              user_data);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_call_finish              (JsonrpcClient        *self,
                                                         GAsyncResult         *result,
                                                         GVariant            **return_value,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_send_notification        (JsonrpcClient        *self,
                                                         const gchar          *method,
                                                         GVariant             *params,
                                                         GCancellable         *cancellable,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_send_notification_async  (JsonrpcClient        *self,
                                                         const gchar          *method,
                                                         GVariant             *params,
                                                         GCancellable         *cancellable,
                                                         GAsyncReadyCallback   callback,
                                                         gpointer              user_data);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_send_notification_finish (JsonrpcClient        *self,
                                                         GAsyncResult         *result,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_reply                    (JsonrpcClient        *self,
                                                         GVariant             *id,
                                                         GVariant             *result,
                                                         GCancellable         *cancellable,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_reply_async              (JsonrpcClient        *self,
                                                         GVariant             *id,
                                                         GVariant             *result,
                                                         GCancellable         *cancellable,
                                                         GAsyncReadyCallback   callback,
                                                         gpointer              user_data);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_reply_finish             (JsonrpcClient        *self,
                                                         GAsyncResult         *result,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_start_listening          (JsonrpcClient        *self);
 
 G_END_DECLS

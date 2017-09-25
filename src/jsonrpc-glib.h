@@ -31,6 +31,7 @@ G_BEGIN_DECLS
 # include "jsonrpc-output-stream.h"
 # include "jsonrpc-server.h"
 # include "jsonrpc-version.h"
+# include "jsonrpc-version-macros.h"
 #undef JSONRPC_GLIB_INSIDE
 
 G_END_DECLS

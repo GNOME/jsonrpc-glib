@@ -23,7 +23,7 @@
 
 G_BEGIN_DECLS
 
-gboolean _jsonrpc_input_stream_get_has_seen_gvariant (JsonrpcInputStream *self);
+gboolean _jsonrpc_input_stream_get_has_seen_gvariant (JsonrpcInputStream *self) G_GNUC_INTERNAL;
 
 G_END_DECLS
 

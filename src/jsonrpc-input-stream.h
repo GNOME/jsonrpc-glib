@@ -21,6 +21,8 @@
 
 #include <gio/gio.h>
 
+#include "jsonrpc-version-macros.h"
+
 G_BEGIN_DECLS
 
 #define JSONRPC_TYPE_INPUT_STREAM (jsonrpc_input_stream_get_type())
@@ -41,15 +43,19 @@ struct _JsonrpcInputStreamClass
   gpointer _reserved8;
 };
 
+JSONRPC_AVAILABLE_IN_3_26
 JsonrpcInputStream *jsonrpc_input_stream_new                 (GInputStream         *base_stream);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean            jsonrpc_input_stream_read_message        (JsonrpcInputStream   *self,
                                                               GCancellable         *cancellable,
                                                               GVariant            **message,
                                                               GError              **error);
+JSONRPC_AVAILABLE_IN_3_26
 void                jsonrpc_input_stream_read_message_async  (JsonrpcInputStream   *self,
                                                               GCancellable         *cancellable,
                                                               GAsyncReadyCallback   callback,
                                                               gpointer              user_data);
+JSONRPC_AVAILABLE_IN_3_26
 gboolean            jsonrpc_input_stream_read_message_finish (JsonrpcInputStream   *self,
                                                               GAsyncResult         *result,
                                                               GVariant            **message,
