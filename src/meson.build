@@ -26,6 +26,7 @@ libjsonrpc_glib_public_headers = [
   'jsonrpc-message.h',
   'jsonrpc-output-stream.h',
   'jsonrpc-server.h',
+  'jsonrpc-version-macros.h',
 ]
 
 libjsonrpc_glib_public_sources = [
