@@ -1,4 +1,18 @@
 ==============
+Version 3.26.1
+==============
+
+Changes in this release:
+
+ • Require -std=gnu11 in project config. We always required this, but
+   previously we were relying on the default GCC flags to do so.
+ • Fix improper use of va_list on non-Intel architectures.
+ • JsonrpcOutputStream now properly checks for pending operations before
+   flushing, so that an error is not incorrectly synthesized.
+ • Improved error propagation from data streams.
+ • Correctness fixes for stress tests.
+
+==============
 Version 3.26.0
 ==============
 
