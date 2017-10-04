@@ -62,7 +62,6 @@ libjsonrpc_glib = library(
      soversion: soversion,
        version: libversion,
        install: true,
-   install_dir: libdir,
 )
 
 libjsonrpc_glib_dep = declare_dependency(
