@@ -1,4 +1,13 @@
 ==============
+Version 3.27.1
+==============
+
+Changes in this release:
+
+ • jsonrpc-glib now uses versioning macros similar to GLib or Gtk instead
+   of a custom linker script for ABI exports.
+
+==============
 Version 3.26.0
 ==============
 
