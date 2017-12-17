@@ -106,7 +106,7 @@ jsonrpc_output_stream_set_property (GObject      *object,
 }
 
 static void
-jsonrpc_output_stream_finalize (GObject *object)
+jsonrpc_output_stream_dispose (GObject *object)
 {
   JsonrpcOutputStream *self = (JsonrpcOutputStream *)object;
   JsonrpcOutputStreamPrivate *priv = jsonrpc_output_stream_get_instance_private (self);
@@ -114,7 +114,7 @@ jsonrpc_output_stream_finalize (GObject *object)
   g_queue_foreach (&priv->queue, (GFunc)g_object_unref, NULL);
   g_queue_clear (&priv->queue);
 
-  G_OBJECT_CLASS (jsonrpc_output_stream_parent_class)->finalize (object);
+  G_OBJECT_CLASS (jsonrpc_output_stream_parent_class)->dispose (object);
 }
 
 static void
@@ -122,7 +122,7 @@ jsonrpc_output_stream_class_init (JsonrpcOutputStreamClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->finalize = jsonrpc_output_stream_finalize;
+  object_class->dispose = jsonrpc_output_stream_dispose;
   object_class->get_property = jsonrpc_output_stream_get_property;
   object_class->set_property = jsonrpc_output_stream_set_property;
 

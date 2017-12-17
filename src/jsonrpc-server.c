@@ -106,7 +106,7 @@ jsonrpc_server_real_handle_call (JsonrpcServer *self,
 }
 
 static void
-jsonrpc_server_finalize (GObject *object)
+jsonrpc_server_dispose (GObject *object)
 {
   JsonrpcServer *self = (JsonrpcServer *)object;
   JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
@@ -114,7 +114,7 @@ jsonrpc_server_finalize (GObject *object)
   g_clear_pointer (&priv->clients, g_hash_table_unref);
   g_clear_pointer (&priv->handlers, g_array_unref);
 
-  G_OBJECT_CLASS (jsonrpc_server_parent_class)->finalize (object);
+  G_OBJECT_CLASS (jsonrpc_server_parent_class)->dispose (object);
 }
 
 static void
@@ -122,7 +122,7 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->finalize = jsonrpc_server_finalize;
+  object_class->dispose = jsonrpc_server_dispose;
 
   klass->handle_call = jsonrpc_server_real_handle_call;
 

@@ -306,7 +306,7 @@ jsonrpc_client_constructed (GObject *object)
 }
 
 static void
-jsonrpc_client_finalize (GObject *object)
+jsonrpc_client_dispose (GObject *object)
 {
   JsonrpcClient *self = (JsonrpcClient *)object;
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
@@ -318,7 +318,7 @@ jsonrpc_client_finalize (GObject *object)
   g_clear_object (&priv->io_stream);
   g_clear_object (&priv->read_loop_cancellable);
 
-  G_OBJECT_CLASS (jsonrpc_client_parent_class)->finalize (object);
+  G_OBJECT_CLASS (jsonrpc_client_parent_class)->dispose (object);
 }
 
 static void
@@ -370,7 +370,7 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->constructed = jsonrpc_client_constructed;
-  object_class->finalize = jsonrpc_client_finalize;
+  object_class->dispose = jsonrpc_client_dispose;
   object_class->get_property = jsonrpc_client_get_property;
   object_class->set_property = jsonrpc_client_set_property;
 
