@@ -49,8 +49,8 @@ read_state_free (gpointer data)
 {
   ReadState *state = data;
 
-  g_free (state->buffer);
-  g_free (state->gvariant_type);
+  g_clear_pointer (&state->buffer, g_free);
+  g_clear_pointer (&state->gvariant_type, g_free);
   g_slice_free (ReadState, state);
 }
 
@@ -137,12 +137,11 @@ jsonrpc_input_stream_read_body_cb (GObject      *object,
   g_assert (message != NULL || error != NULL);
 
   if (error != NULL)
-    {
-      g_task_return_error (task, g_steal_pointer (&error));
-      return;
-    }
-
-  g_task_return_pointer (task, g_steal_pointer (&message), (GDestroyNotify)g_variant_unref);
+    g_task_return_error (task, g_steal_pointer (&error));
+  else
+    g_task_return_pointer (task,
+                           g_steal_pointer (&message),
+                           (GDestroyNotify)g_variant_unref);
 }
 
 static void
