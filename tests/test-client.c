@@ -120,7 +120,8 @@ main (gint   argc,
   g_variant_dict_insert (&params, "rootPath", "s", path);
   g_variant_dict_insert_value (&params, "capabilities", g_variant_new ("a{sv}", NULL, NULL, NULL));
 
-  jsonrpc_client_call_async (gClient, "initialize", g_variant_dict_end (&params), NULL, call_cb, NULL);
+  /* Use a method name with / to ensure we test more complex paths */
+  jsonrpc_client_call_async (gClient, "initialize/foo", g_variant_dict_end (&params), NULL, call_cb, NULL);
 
   g_timeout_add_seconds (5, timeout_cb, NULL);
 

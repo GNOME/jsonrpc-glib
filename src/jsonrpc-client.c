@@ -428,12 +428,16 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
    * in a timely manner using jsonrpc_client_reply() or
    * jsonrpc_client_reply_async().
    *
+   * Additionally, since 3.28 you may connect to the "detail" of this signal
+   * to handle a specific method call. Use the method name as the detail of
+   * the signal.
+   *
    * Since: 3.26
    */
   signals [HANDLE_CALL] =
     g_signal_new ("handle-call",
                   G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   G_STRUCT_OFFSET (JsonrpcClientClass, handle_call),
                   g_signal_accumulator_true_handled, NULL, NULL,
                   G_TYPE_BOOLEAN,
@@ -675,6 +679,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
       g_autoptr(GVariant) params = NULL;
       const gchar *method_name = NULL;
       gboolean ret = FALSE;
+      GQuark detail;
 
       if (!g_variant_dict_lookup (&dict, "method", "&s", &method_name) ||
           NULL == (id = g_variant_dict_lookup_value (&dict, "id", NULL)))
@@ -691,7 +696,8 @@ jsonrpc_client_call_read_cb (GObject      *object,
       g_assert (method_name != NULL);
       g_assert (id != NULL);
 
-      g_signal_emit (self, signals [HANDLE_CALL], 0, method_name, id, params, &ret);
+      detail = g_quark_try_string (method_name);
+      g_signal_emit (self, signals [HANDLE_CALL], detail, method_name, id, params, &ret);
 
       if (ret == FALSE)
         {
