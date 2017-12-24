@@ -146,6 +146,8 @@ typedef struct
 
 #define JSONRPC_MESSAGE_NEW(first_, ...) \
   jsonrpc_message_new(first_, __VA_ARGS__, NULL)
+#define JSONRPC_MESSAGE_NEW_ARRAY(first_, ...) \
+  jsonrpc_message_new_array(first_, __VA_ARGS__, NULL)
 #define JSONRPC_MESSAGE_PARSE(message, ...) \
   jsonrpc_message_parse(message,  __VA_ARGS__, NULL)
 #define JSONRPC_MESSAGE_PARSE_ARRAY(iter, ...) \
@@ -187,6 +189,9 @@ typedef struct
 
 JSONRPC_AVAILABLE_IN_3_26
 GVariant *jsonrpc_message_new         (gpointer first_param, ...) G_GNUC_NULL_TERMINATED;
+
+JSONRPC_AVAILABLE_IN_3_26
+GVariant *jsonrpc_message_new_array   (gpointer first_param, ...) G_GNUC_NULL_TERMINATED;
 
 JSONRPC_AVAILABLE_IN_3_26
 gboolean  jsonrpc_message_parse       (GVariant *message, ...) G_GNUC_NULL_TERMINATED;

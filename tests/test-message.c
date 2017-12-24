@@ -163,6 +163,39 @@ test_array_toplevel (void)
   g_assert_cmpstr (a, ==, "a");
 }
 
+static void
+test_new_array (void)
+{
+  g_autoptr(GVariant) node = NULL;
+  GVariantIter iter;
+  const gchar *a = NULL;
+  const gchar *b = NULL;
+  const gchar *c = NULL;
+  const gchar *d = NULL;
+  const gchar *e = NULL;
+  gboolean r;
+
+  node = JSONRPC_MESSAGE_NEW_ARRAY ("a", "b", "c", "d", "e");
+  g_assert (node != NULL);
+  g_assert (g_variant_is_of_type (node, G_VARIANT_TYPE ("av")));
+
+  r = g_variant_iter_init (&iter, node);
+  g_assert_true (r);
+
+  r = JSONRPC_MESSAGE_PARSE_ARRAY (&iter,
+                                   JSONRPC_MESSAGE_GET_STRING (&a),
+                                   JSONRPC_MESSAGE_GET_STRING (&b),
+                                   JSONRPC_MESSAGE_GET_STRING (&c),
+                                   JSONRPC_MESSAGE_GET_STRING (&d),
+                                   JSONRPC_MESSAGE_GET_STRING (&e));
+  g_assert_cmpint (r, ==, TRUE);
+  g_assert_cmpstr (a, ==, "a");
+  g_assert_cmpstr (b, ==, "b");
+  g_assert_cmpstr (c, ==, "c");
+  g_assert_cmpstr (d, ==, "d");
+  g_assert_cmpstr (e, ==, "e");
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -175,5 +208,6 @@ main (gint argc,
   g_test_add_func ("/Jsonrpc/Message/extract_node", test_extract_node);
   g_test_add_func ("/Jsonrpc/Message/paren", test_paren);
   g_test_add_func ("/Jsonrpc/Message/array_toplevel", test_array_toplevel);
+  g_test_add_func ("/Jsonrpc/Message/new_array", test_new_array);
   return g_test_run ();
 }

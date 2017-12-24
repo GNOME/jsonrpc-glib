@@ -209,7 +209,8 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
   g_variant_builder_close (builder);
 
   param = va_arg (*args, gpointer);
-  jsonrpc_message_build_array (builder, param, args);
+  if (param != NULL)
+    jsonrpc_message_build_array (builder, param, args);
 
   EXIT;
 }
@@ -239,6 +240,39 @@ jsonrpc_message_new (gpointer first_param,
 
   va_start (args, first_param);
   ret = jsonrpc_message_new_valist (first_param, &args);
+  va_end (args);
+
+  if (g_variant_is_floating (ret))
+    g_variant_take_ref (ret);
+
+  return ret;
+}
+
+static GVariant *
+jsonrpc_message_new_array_valist (gpointer  first_param,
+                                  va_list  *args)
+{
+  GVariantBuilder builder;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("av"));
+
+  if (first_param != NULL)
+    jsonrpc_message_build_array (&builder, first_param, args);
+
+  return g_variant_builder_end (&builder);
+}
+
+GVariant *
+jsonrpc_message_new_array (gpointer first_param,
+                           ...)
+{
+  GVariant *ret;
+  va_list args;
+
+  g_return_val_if_fail (first_param != NULL, NULL);
+
+  va_start (args, first_param);
+  ret = jsonrpc_message_new_array_valist (first_param, &args);
   va_end (args);
 
   if (g_variant_is_floating (ret))
