@@ -458,7 +458,7 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
   signals [NOTIFICATION] =
     g_signal_new ("notification",
                   G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   G_STRUCT_OFFSET (JsonrpcClientClass, notification),
                   NULL, NULL, NULL,
                   G_TYPE_NONE,
@@ -633,8 +633,10 @@ jsonrpc_client_call_read_cb (GObject      *object,
 
       if (g_variant_dict_lookup (&dict, "method", "&s", &method_name))
         {
+          GQuark detail = g_quark_try_string (method_name);
+
           params = g_variant_dict_lookup_value (&dict, "params", NULL);
-          g_signal_emit (self, signals [NOTIFICATION], 0, method_name, params);
+          g_signal_emit (self, signals [NOTIFICATION], detail, method_name, params);
         }
 
       goto begin_next_read;
