@@ -168,12 +168,12 @@ main (gint argc,
       gchar *argv[])
 {
   g_test_init (&argc, &argv, NULL);
-  g_test_add_func ("/Jcon/basic", test_basic);
-  g_test_add_func ("/Jcon/deep_array", test_deep_array);
-  g_test_add_func ("/Jcon/extract_array", test_extract_array);
-  g_test_add_func ("/Jcon/extract_object", test_extract_object);
-  g_test_add_func ("/Jcon/extract_node", test_extract_node);
-  g_test_add_func ("/Jcon/paren", test_paren);
-  g_test_add_func ("/Jcon/array_toplevel", test_array_toplevel);
+  g_test_add_func ("/Jsonrpc/Message/basic", test_basic);
+  g_test_add_func ("/Jsonrpc/Message/deep_array", test_deep_array);
+  g_test_add_func ("/Jsonrpc/Message/extract_array", test_extract_array);
+  g_test_add_func ("/Jsonrpc/Message/extract_object", test_extract_object);
+  g_test_add_func ("/Jsonrpc/Message/extract_node", test_extract_node);
+  g_test_add_func ("/Jsonrpc/Message/paren", test_paren);
+  g_test_add_func ("/Jsonrpc/Message/array_toplevel", test_array_toplevel);
   return g_test_run ();
 }
