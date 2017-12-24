@@ -196,6 +196,17 @@ test_new_array (void)
   g_assert_cmpstr (e, ==, "e");
 }
 
+static void
+test_new_array_objs (void)
+{
+  g_autoptr(GVariant) node = NULL;
+
+  node = JSONRPC_MESSAGE_NEW_ARRAY ("{","}", "{", "}");
+  g_assert (node != NULL);
+  g_assert (g_variant_is_of_type (node, G_VARIANT_TYPE ("av")));
+  g_assert_cmpint (g_variant_n_children (node), ==, 2);
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -209,5 +220,6 @@ main (gint argc,
   g_test_add_func ("/Jsonrpc/Message/paren", test_paren);
   g_test_add_func ("/Jsonrpc/Message/array_toplevel", test_array_toplevel);
   g_test_add_func ("/Jsonrpc/Message/new_array", test_new_array);
+  g_test_add_func ("/Jsonrpc/Message/new_array_objs", test_new_array_objs);
   return g_test_run ();
 }
