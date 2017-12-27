@@ -847,7 +847,7 @@ jsonrpc_client_call (JsonrpcClient  *self,
 
   main_context = g_main_context_ref_thread_default ();
 
-  task = g_task_new (NULL, NULL, NULL, NULL);
+  task = g_task_new (self, NULL, NULL, NULL);
   g_task_set_source_tag (task, jsonrpc_client_call);
 
   jsonrpc_client_call_async (self,
