@@ -149,7 +149,7 @@ begin_next_op_source (gpointer data)
     "ops-left", JSONRPC_MESSAGE_PUT_INT32 (n_ops)
   );
 
-  LOG ("client: dispatching next async call");
+  LOG ("client: dispatching next async call: %d\n", n_ops);
 
   n_ops--;
 
