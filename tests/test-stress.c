@@ -27,9 +27,9 @@ static gint n_ops;
 static gboolean begin_next_op_source (gpointer data);
 
 #if 0
-# define LOG(s) g_print(s "\n")
+# define LOG(s,...) g_print(s "\n", ## __VA_ARGS__)
 #else
-# define LOG(s) do { } while (0)
+# define LOG(s,...) do { } while (0)
 #endif
 
 static GIOStream *
