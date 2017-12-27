@@ -178,6 +178,7 @@ test_basic (gboolean use_gvariant)
   g_assert_no_error (error);
   g_assert_cmpint (r, ==, TRUE);
   g_assert (return_value != NULL);
+  g_clear_pointer (&return_value, g_variant_unref);
 
   g_assert_cmpint (count, ==, 1);
 
@@ -200,6 +201,7 @@ test_basic (gboolean use_gvariant)
   g_assert_no_error (error);
   g_assert_cmpint (r, ==, TRUE);
   g_assert (return_value != NULL);
+  g_clear_pointer (&return_value, g_variant_unref);
 
   g_assert_cmpint (count, ==, 2);
 
