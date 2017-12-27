@@ -781,7 +781,9 @@ jsonrpc_client_call_read_cb (GObject      *object,
   g_warning ("Unhandled RPC from peer!");
 
 begin_next_read:
-  if (priv->input_stream != NULL && priv->in_shutdown == FALSE)
+  if (priv->input_stream != NULL &&
+      priv->in_shutdown == FALSE &&
+      priv->failed == FALSE)
     jsonrpc_input_stream_read_message_async (priv->input_stream,
                                              priv->read_loop_cancellable,
                                              jsonrpc_client_call_read_cb,
