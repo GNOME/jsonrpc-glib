@@ -132,8 +132,10 @@ jsonrpc_input_stream_read_body_cb (GObject      *object,
   else
     {
       message = json_gvariant_deserialize_data (state->buffer, state->content_length, NULL, &error);
+      g_clear_pointer (&state->buffer, g_free);
     }
 
+  g_assert (state->buffer == NULL);
   g_assert (message != NULL || error != NULL);
 
   if (error != NULL)
