@@ -155,7 +155,7 @@ begin_next_op_source (gpointer data)
 
   jsonrpc_client_call_async (client,
                              "some/operation",
-                             g_steal_pointer (&params),
+                             params,
                              NULL,
                              client_call_cb,
                              NULL);
