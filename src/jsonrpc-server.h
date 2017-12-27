@@ -75,6 +75,10 @@ guint          jsonrpc_server_add_handler      (JsonrpcServer        *self,
 JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_server_remove_handler   (JsonrpcServer        *self,
                                                 guint                 handler_id);
+JSONRPC_AVAILABLE_IN_3_28
+void           jsonrpc_server_foreach          (JsonrpcServer        *self,
+                                                GFunc                 foreach_func,
+                                                gpointer              user_data);
 
 G_END_DECLS
 

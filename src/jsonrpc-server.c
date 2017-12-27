@@ -360,3 +360,35 @@ jsonrpc_server_remove_handler (JsonrpcServer *self,
         }
     }
 }
+
+/**
+ * jsonrpc_server_foreach:
+ * @self: a #JsonrpcServer
+ * @foreach_func: (scope call): a callback for each client
+ * @user_data: closure data for @foreach_func
+ *
+ * Calls @foreach_func for every client connected.
+ *
+ * Since: 3.28
+ */
+void
+jsonrpc_server_foreach (JsonrpcServer *self,
+                        GFunc          foreach_func,
+                        gpointer       user_data)
+{
+  JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
+  g_autofree gpointer *keys = NULL;
+  guint len;
+
+  g_return_if_fail (JSONRPC_IS_SERVER (self));
+  g_return_if_fail (foreach_func != NULL);
+
+  keys = g_hash_table_get_keys_as_array (priv->clients, &len);
+
+  for (guint i = 0; i < len; i++)
+    {
+      JsonrpcClient *client = keys[i];
+      g_assert (JSONRPC_IS_CLIENT (client));
+      foreach_func (client, user_data);
+    }
+}
