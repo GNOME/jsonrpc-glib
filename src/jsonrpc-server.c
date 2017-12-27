@@ -207,6 +207,32 @@ jsonrpc_server_new (void)
 }
 
 static gboolean
+dummy_func (gpointer data)
+{
+  return G_SOURCE_REMOVE;
+}
+
+static void
+jsonrpc_server_client_failed (JsonrpcServer *self,
+                              JsonrpcClient *client)
+{
+  JsonrpcServerPrivate *priv = jsonrpc_server_get_instance_private (self);
+
+  g_assert (JSONRPC_IS_SERVER (self));
+  g_assert (JSONRPC_IS_CLIENT (client));
+
+  if (priv->clients != NULL &&
+      g_hash_table_contains (priv->clients, client))
+    {
+      /* Release instance from main thread to ensure callers return
+       * safely without having to be careful about incrementing ref
+       */
+      g_hash_table_steal (priv->clients, client);
+      g_idle_add_full (G_MAXINT, dummy_func, client, g_object_unref);
+    }
+}
+
+static gboolean
 jsonrpc_server_client_handle_call (JsonrpcServer *self,
                                    const gchar   *method,
                                    JsonNode      *id,
@@ -262,6 +288,12 @@ jsonrpc_server_accept_io_stream (JsonrpcServer *self,
   g_return_if_fail (G_IS_IO_STREAM (io_stream));
 
   client = jsonrpc_client_new (io_stream);
+
+  g_signal_connect_object (client,
+                           "failed",
+                           G_CALLBACK (jsonrpc_server_client_failed),
+                           self,
+                           G_CONNECT_SWAPPED);
 
   g_signal_connect_object (client,
                            "handle-call",
