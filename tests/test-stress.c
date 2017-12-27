@@ -41,6 +41,18 @@ create_stream (gint read_fd, gint write_fd)
   return g_simple_io_stream_new (input, output);
 }
 
+static gboolean
+close_in_idle (gpointer user_data)
+{
+  JsonrpcClient *client = user_data;
+
+  g_assert (JSONRPC_IS_CLIENT (client));
+
+  jsonrpc_client_close (client, NULL, NULL);
+
+  return G_SOURCE_REMOVE;
+}
+
 static void
 server_handle_reply_cb (JsonrpcClient *client,
                         GAsyncResult  *result,
@@ -68,7 +80,10 @@ server_handle_reply_cb (JsonrpcClient *client,
       /* Close might error, but the tasks are always
        * flushed and cancelled.
        */
-      jsonrpc_client_close (client, NULL, NULL);
+      g_idle_add_full (G_PRIORITY_LOW + 1000,
+                       close_in_idle,
+                       g_object_ref (client),
+                       g_object_unref);
     }
 }
 
