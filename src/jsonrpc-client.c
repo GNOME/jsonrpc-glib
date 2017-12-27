@@ -143,6 +143,7 @@ enum {
 };
 
 enum {
+  FAILED,
   HANDLE_CALL,
   NOTIFICATION,
   N_SIGNALS
@@ -251,6 +252,8 @@ jsonrpc_client_panic (JsonrpcClient *self,
   g_hash_table_iter_init (&iter, invocations);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
     g_task_return_error (task, g_error_copy (error));
+
+  g_signal_emit (self, signals [FAILED], 0);
 }
 
 /*
@@ -411,6 +414,26 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
                           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_properties (object_class, N_PROPS, properties);
+
+  /**
+   * JsonrpcClient::failed:
+   *
+   * The "failed" signal is called when the client has failed communication
+   * or the connection has been knowingly closed.
+   *
+   * Since: 3.28
+   */
+  signals [FAILED] =
+    g_signal_new ("failed",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (JsonrpcClientClass, failed),
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+  g_signal_set_va_marshaller (signals [FAILED],
+                              G_TYPE_FROM_CLASS (klass),
+                              g_cclosure_marshal_VOID__VOIDv);
 
   /**
    * JsonrpcClient::handle-call:
@@ -1186,6 +1209,8 @@ jsonrpc_client_close (JsonrpcClient  *self,
       while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
         g_task_return_error (task, g_error_copy (local_error));
     }
+
+  g_signal_emit (self, signals [FAILED], 0);
 
   return ret;
 }

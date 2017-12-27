@@ -41,8 +41,8 @@ struct _JsonrpcClientClass
                             const gchar   *method,
                             GVariant      *id,
                             GVariant      *params);
+  void     (*failed)       (JsonrpcClient *self);
 
-  gpointer _reserved1;
   gpointer _reserved2;
   gpointer _reserved3;
   gpointer _reserved4;
