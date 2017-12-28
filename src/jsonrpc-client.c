@@ -723,21 +723,9 @@ jsonrpc_client_call_read_cb (GObject      *object,
       g_signal_emit (self, signals [HANDLE_CALL], detail, method_name, id, params, &ret);
 
       if (ret == FALSE)
-        {
-          GVariantDict reply;
-          GVariantDict error_dict;
-
-          g_variant_dict_init (&error_dict, NULL);
-          g_variant_dict_insert (&error_dict, "code", "i", -32601);
-          g_variant_dict_insert (&error_dict, "message", "s", "The method does not exist or is not available");
-
-          g_variant_dict_init (&reply, NULL);
-          g_variant_dict_insert (&reply, "jsonrpc", "s", "2.0");
-          g_variant_dict_insert_value (&reply, "id", id);
-          g_variant_dict_insert_value (&reply, "error", g_variant_dict_end (&error_dict));
-
-          jsonrpc_output_stream_write_message_async (priv->output_stream, g_variant_dict_end (&reply), NULL, NULL, NULL);
-        }
+        jsonrpc_client_reply_error_async (self, id, -32601,
+                                          "The method does not exist or is not available",
+                                          NULL, NULL, NULL);
 
       goto begin_next_read;
     }
@@ -1269,6 +1257,88 @@ jsonrpc_client_close_finish (JsonrpcClient  *self,
 {
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
   g_return_val_if_fail (G_IS_TASK (result), FALSE);
+
+  return g_task_propagate_boolean (G_TASK (result), error);
+}
+
+static void
+jsonrpc_client_reply_error_cb (GObject      *object,
+                               GAsyncResult *result,
+                               gpointer      user_data)
+{
+  JsonrpcOutputStream *stream = (JsonrpcOutputStream *)object;
+  g_autoptr(GTask) task = user_data;
+  g_autoptr(GError) error = NULL;
+
+  g_assert (JSONRPC_IS_OUTPUT_STREAM (stream));
+  g_assert (G_IS_ASYNC_RESULT (result));
+  g_assert (G_IS_TASK (task));
+
+  if (!jsonrpc_output_stream_write_message_finish (stream, result, &error))
+    g_task_return_error (task, g_steal_pointer (&error));
+  else
+    g_task_return_boolean (task, TRUE);
+}
+
+void
+jsonrpc_client_reply_error_async (JsonrpcClient       *self,
+                                  GVariant            *id,
+                                  gint                 code,
+                                  const gchar         *message,
+                                  GCancellable        *cancellable,
+                                  GAsyncReadyCallback  callback,
+                                  gpointer             user_data)
+{
+  JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
+  g_autoptr(GTask) task = NULL;
+  g_autoptr(GError) error = NULL;
+  g_autoptr(GVariant) vreply = NULL;
+  GVariantDict reply;
+  GVariantDict error_dict;
+
+  g_return_if_fail (JSONRPC_IS_CLIENT (self));
+  g_return_if_fail (id != NULL);
+  g_return_if_fail (!cancellable || G_IS_CANCELLABLE (cancellable));
+
+  if (message == NULL)
+    message = "An error occurred";
+
+  task = g_task_new (self, cancellable, callback, user_data);
+  g_task_set_source_tag (task, jsonrpc_client_reply_error_async);
+  g_task_set_priority (task, G_PRIORITY_LOW);
+
+  if (!jsonrpc_client_check_ready (self, &error))
+    {
+      g_task_return_error (task, g_steal_pointer (&error));
+      return;
+    }
+
+  g_variant_dict_init (&error_dict, NULL);
+  g_variant_dict_insert (&error_dict, "code", "i", code);
+  g_variant_dict_insert (&error_dict, "message", "s", message);
+
+  g_variant_dict_init (&reply, NULL);
+  g_variant_dict_insert (&reply, "jsonrpc", "s", "2.0");
+  g_variant_dict_insert_value (&reply, "id", id);
+  g_variant_dict_insert_value (&reply, "error", g_variant_dict_end (&error_dict));
+
+  vreply = g_variant_take_ref (g_variant_dict_end (&reply));
+
+  jsonrpc_output_stream_write_message_async (priv->output_stream,
+                                             vreply,
+                                             cancellable,
+                                             jsonrpc_client_reply_error_cb,
+                                             g_steal_pointer (&task));
+}
+
+gboolean
+jsonrpc_client_reply_error_finish (JsonrpcClient  *self,
+                                   GAsyncResult   *result,
+                                   GError        **error)
+{
+  g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
+  g_return_val_if_fail (G_IS_TASK (result), FALSE);
+  g_return_val_if_fail (g_task_is_valid (G_TASK (result), self), FALSE);
 
   return g_task_propagate_boolean (G_TASK (result), error);
 }

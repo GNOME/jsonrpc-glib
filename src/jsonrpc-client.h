@@ -127,6 +127,18 @@ JSONRPC_AVAILABLE_IN_3_26
 gboolean       jsonrpc_client_reply_finish             (JsonrpcClient        *self,
                                                         GAsyncResult         *result,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_28
+void           jsonrpc_client_reply_error_async        (JsonrpcClient        *self,
+                                                        GVariant             *id,
+                                                        gint                  code,
+                                                        const gchar          *message,
+                                                        GCancellable         *cancellable,
+                                                        GAsyncReadyCallback   callback,
+                                                        gpointer              user_data);
+JSONRPC_AVAILABLE_IN_3_28
+gboolean       jsonrpc_client_reply_error_finish       (JsonrpcClient        *self,
+                                                        GAsyncResult         *result,
+                                                        GError              **error);
 JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_start_listening          (JsonrpcClient        *self);
 
