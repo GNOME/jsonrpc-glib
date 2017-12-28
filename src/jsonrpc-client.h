@@ -28,6 +28,15 @@ G_BEGIN_DECLS
 #define JSONRPC_TYPE_CLIENT  (jsonrpc_client_get_type())
 #define JSONRPC_CLIENT_ERROR (jsonrpc_client_error_quark())
 
+typedef enum
+{
+  JSONRPC_CLIENT_ERROR_PARSE_ERROR      = -32700,
+  JSONRPC_CLIENT_ERROR_INVALID_REQUEST  = -32600,
+  JSONRPC_CLIENT_ERROR_METHOD_NOT_FOUND = -32601,
+  JSONRPC_CLIENT_ERROR_INVALID_PARAMS   = -32602,
+  JSONRPC_CLIENT_ERROR_INTERNAL_ERROR   = -32603,
+} JsonrpcClientError;
+
 G_DECLARE_DERIVABLE_TYPE (JsonrpcClient, jsonrpc_client, JSONRPC, CLIENT, GObject)
 
 struct _JsonrpcClientClass

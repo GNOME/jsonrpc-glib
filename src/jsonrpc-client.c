@@ -723,7 +723,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
       g_signal_emit (self, signals [HANDLE_CALL], detail, method_name, id, params, &ret);
 
       if (ret == FALSE)
-        jsonrpc_client_reply_error_async (self, id, -32601,
+        jsonrpc_client_reply_error_async (self, id, JSONRPC_CLIENT_ERROR_METHOD_NOT_FOUND,
                                           "The method does not exist or is not available",
                                           NULL, NULL, NULL);
 
