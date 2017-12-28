@@ -128,7 +128,12 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
 
     default:
       if (IS_PUT_STRING (valptr))
-        g_variant_builder_add (builder, "s", ((JsonrpcMessagePutString *)valptr)->val);
+        {
+          if (((JsonrpcMessagePutString *)valptr)->val != NULL)
+            g_variant_builder_add (builder, "s", ((JsonrpcMessagePutString *)valptr)->val);
+          else
+            g_variant_builder_add (builder, "ms", NULL);
+        }
       else if (IS_PUT_INT32 (valptr))
         g_variant_builder_add (builder, "i", ((JsonrpcMessagePutInt32 *)valptr)->val);
       else if (IS_PUT_INT64 (valptr))
@@ -138,7 +143,12 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
       else if (IS_PUT_DOUBLE (valptr))
         g_variant_builder_add (builder, "d", ((JsonrpcMessagePutDouble *)valptr)->val);
       else
-        g_variant_builder_add (builder, "s", (const char *)valptr);
+        {
+          if (valptr != NULL)
+            g_variant_builder_add (builder, "s", (const char *)valptr);
+          else
+            g_variant_builder_add (builder, "ms", NULL);
+        }
       break;
     }
 
@@ -192,7 +202,12 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
 
     default:
       if (IS_PUT_STRING (valptr))
-        g_variant_builder_add (builder, "s", ((JsonrpcMessagePutString *)valptr)->val);
+        {
+          if (((JsonrpcMessagePutString *)valptr)->val != NULL)
+            g_variant_builder_add (builder, "s", ((JsonrpcMessagePutString *)valptr)->val);
+          else
+            g_variant_builder_add (builder, "ms", NULL);
+        }
       else if (IS_PUT_INT32 (valptr))
         g_variant_builder_add (builder, "i", ((JsonrpcMessagePutInt32 *)valptr)->val);
       else if (IS_PUT_INT64 (valptr))
@@ -202,7 +217,12 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
       else if (IS_PUT_DOUBLE (valptr))
         g_variant_builder_add (builder, "d", ((JsonrpcMessagePutDouble *)valptr)->val);
       else
-        g_variant_builder_add (builder, "s", (const char *)valptr);
+        {
+          if (valptr != NULL)
+            g_variant_builder_add (builder, "s", (const char *)valptr);
+          else
+            g_variant_builder_add (builder, "ms", NULL);
+        }
       break;
     }
 
@@ -347,7 +367,10 @@ jsonrpc_message_parse_object (GVariantDict *dict,
   else if (IS_GET_VARIANT (valptr))
     ret = !!(*((JsonrpcMessageGetVariant *)valptr)->variantptr = g_variant_dict_lookup_value (dict, key, NULL));
   else if (IS_GET_STRING (valptr))
-    ret = g_variant_dict_lookup (dict, key, "&s", ((JsonrpcMessageGetString *)valptr)->valptr);
+    {
+      ret = g_variant_dict_lookup (dict, key, "&s", ((JsonrpcMessageGetString *)valptr)->valptr) ||
+            g_variant_dict_lookup (dict, key, "m&s", ((JsonrpcMessageGetString *)valptr)->valptr);
+    }
   else if (IS_GET_INT32 (valptr))
     ret = g_variant_dict_lookup (dict, key, "i", ((JsonrpcMessageGetInt32 *)valptr)->valptr);
   else if (IS_GET_INT64 (valptr))
@@ -360,7 +383,10 @@ jsonrpc_message_parse_object (GVariantDict *dict,
     {
       /* Assume the string is a raw string, so compare for equality */
       const gchar *valstr = NULL;
-      ret = g_variant_dict_lookup (dict, key, "&s", &valstr) && g_strcmp0 (valstr, (const char *)valptr) == 0;
+      ret = g_variant_dict_lookup (dict, key, "&s", &valstr) ||
+            g_variant_dict_lookup (dict, key, "m&s", &valstr);
+      if (ret)
+        ret = g_strcmp0 (valstr, (const gchar *)valptr) == 0;
     }
 
   if (!ret || !param)
@@ -434,6 +460,8 @@ jsonrpc_message_parse_array_va (GVariantIter *iter,
     {
       if ((ret = g_variant_is_of_type (value, G_VARIANT_TYPE_STRING)))
         *((JsonrpcMessageGetString *)valptr)->valptr = g_variant_get_string (value, NULL);
+      else if ((ret = g_variant_is_of_type (value, G_VARIANT_TYPE ("ms"))))
+        g_variant_get (value, "m&s", ((JsonrpcMessageGetString *)valptr)->valptr);
     }
   else if (IS_GET_INT32 (valptr))
     {
@@ -457,9 +485,15 @@ jsonrpc_message_parse_array_va (GVariantIter *iter,
     }
   else
     {
+      const gchar *val = NULL;
+
       /* Assume the string is a raw string, so compare for equality */
-      ret = g_variant_is_of_type (value, G_VARIANT_TYPE_STRING) &&
-            (0 == g_strcmp0 (g_variant_get_string (value, NULL), (const gchar *)valptr));
+      if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
+        val = g_variant_get_string (value, NULL);
+      else if (g_variant_is_of_type (value, G_VARIANT_TYPE ("ms")))
+        g_variant_get (value, "m&s", &val);
+
+      ret = g_strcmp0 (val, (const gchar *)valptr) == 0;
     }
 
   if (!ret || !param)
