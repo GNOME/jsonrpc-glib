@@ -368,8 +368,20 @@ jsonrpc_message_parse_object (GVariantDict *dict,
     ret = !!(*((JsonrpcMessageGetVariant *)valptr)->variantptr = g_variant_dict_lookup_value (dict, key, NULL));
   else if (IS_GET_STRING (valptr))
     {
-      ret = g_variant_dict_lookup (dict, key, "&s", ((JsonrpcMessageGetString *)valptr)->valptr) ||
-            g_variant_dict_lookup (dict, key, "m&s", ((JsonrpcMessageGetString *)valptr)->valptr);
+      g_autoptr(GVariant) v = g_variant_dict_lookup_value (dict, key, G_VARIANT_TYPE_ANY);
+
+      /* Safe to get data pointer because @v is a sub-variant of the
+       * larger buffer and therefore shares raw data */
+      if (g_variant_is_of_type (v, G_VARIANT_TYPE ("s")))
+        {
+          *((JsonrpcMessageGetString *)valptr)->valptr = g_variant_get_string (v, NULL);
+          ret = TRUE;
+        }
+      else if (g_variant_is_of_type (v, G_VARIANT_TYPE ("mv")))
+        {
+          *((JsonrpcMessageGetString *)valptr)->valptr = NULL;
+          ret = TRUE;
+        }
     }
   else if (IS_GET_INT32 (valptr))
     ret = g_variant_dict_lookup (dict, key, "i", ((JsonrpcMessageGetInt32 *)valptr)->valptr);
