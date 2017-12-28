@@ -230,13 +230,16 @@ jsonrpc_client_panic (JsonrpcClient *self,
   g_assert (JSONRPC_IS_CLIENT (self));
   g_assert (error != NULL);
 
-  priv->failed = TRUE;
+  g_object_ref (self);
 
-  jsonrpc_client_close (self, NULL, NULL);
+  priv->failed = TRUE;
 
   /* Steal the tasks so that we don't have to worry about reentry. */
   invocations = g_steal_pointer (&priv->invocations);
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
+
+  /* Now close the connection */
+  jsonrpc_client_close (self, NULL, NULL);
 
   /*
    * Clear our input and output streams so that new calls
@@ -254,6 +257,8 @@ jsonrpc_client_panic (JsonrpcClient *self,
     g_task_return_error (task, g_error_copy (error));
 
   g_signal_emit (self, signals [FAILED], 0);
+
+  g_object_unref (self);
 }
 
 /*
