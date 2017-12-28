@@ -227,6 +227,7 @@ jsonrpc_server_client_failed (JsonrpcServer *self,
       /* Release instance from main thread to ensure callers return
        * safely without having to be careful about incrementing ref
        */
+      g_debug ("Lost connection to client [%p]", client);
       g_hash_table_steal (priv->clients, client);
       g_idle_add_full (G_MAXINT, dummy_func, client, g_object_unref);
     }
