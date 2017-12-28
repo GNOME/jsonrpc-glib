@@ -207,6 +207,35 @@ test_new_array_objs (void)
   g_assert_cmpint (g_variant_n_children (node), ==, 2);
 }
 
+static void
+test_null_string (void)
+{
+  g_autoptr(GVariant) msg = NULL;
+  const gchar *foo = NULL;
+  const gchar *foo2 = NULL;
+  const gchar *content_type = "xx";
+  gboolean success;
+
+  msg = JSONRPC_MESSAGE_NEW (
+    "foo", "bar",
+    "foo2", JSONRPC_MESSAGE_PUT_STRING ("baz"),
+    "content-type", JSONRPC_MESSAGE_PUT_STRING (NULL)
+  );
+
+  g_assert (msg != NULL);
+
+  success = JSONRPC_MESSAGE_PARSE (msg,
+    "foo", JSONRPC_MESSAGE_GET_STRING (&foo),
+    "foo2", JSONRPC_MESSAGE_GET_STRING (&foo2),
+    "content-type", JSONRPC_MESSAGE_GET_STRING (&content_type)
+  );
+
+  g_assert_true (success);
+  g_assert_cmpstr (foo, ==, "bar");
+  g_assert_cmpstr (foo2, ==, "baz");
+  g_assert_cmpstr (content_type, ==, NULL);
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -221,5 +250,6 @@ main (gint argc,
   g_test_add_func ("/Jsonrpc/Message/array_toplevel", test_array_toplevel);
   g_test_add_func ("/Jsonrpc/Message/new_array", test_new_array);
   g_test_add_func ("/Jsonrpc/Message/new_array_objs", test_new_array_objs);
+  g_test_add_func ("/Jsonrpc/Message/null_string", test_null_string);
   return g_test_run ();
 }
