@@ -143,12 +143,7 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
       else if (IS_PUT_DOUBLE (valptr))
         g_variant_builder_add (builder, "d", ((JsonrpcMessagePutDouble *)valptr)->val);
       else
-        {
-          if (valptr != NULL)
-            g_variant_builder_add (builder, "s", (const char *)valptr);
-          else
-            g_variant_builder_add (builder, "ms", NULL);
-        }
+        g_variant_builder_add (builder, "s", (const char *)valptr);
       break;
     }
 
@@ -217,12 +212,7 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
       else if (IS_PUT_DOUBLE (valptr))
         g_variant_builder_add (builder, "d", ((JsonrpcMessagePutDouble *)valptr)->val);
       else
-        {
-          if (valptr != NULL)
-            g_variant_builder_add (builder, "s", (const char *)valptr);
-          else
-            g_variant_builder_add (builder, "ms", NULL);
-        }
+        g_variant_builder_add (builder, "s", (const char *)valptr);
       break;
     }
 
