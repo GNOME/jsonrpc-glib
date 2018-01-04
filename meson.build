@@ -38,7 +38,6 @@ configure_file(
 add_project_arguments([
   '-DHAVE_CONFIG_H',
   '-I' + meson.build_root(),
-  '-I' + join_paths(meson.source_root(), 'src'),
   '-DJSONRPC_GLIB_COMPILATION',
 ], language: 'c')
 
