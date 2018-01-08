@@ -1,4 +1,22 @@
 ==============
+Version 3.27.4
+==============
+
+Changes in this release:
+
+ • The JSONRPC_MESSAGE_NEW_ARRAY() macro was added to allow for creating
+   GVariant messages that are an array.
+ • A number of conformance tests were added.
+ • JsonrpcClient allows for detailed signals (G_SIGNAL_DETAILED) for
+   notification and handle-call signals.
+ • JsonrpcServer gained new functionality to enumerate the number of
+   connected clients.
+ • JsonrpcClient tries to hold on to an additional reference when
+   panic is called.
+ • Message parsing can now support NULL strings using maybe types when
+   encoding and decoding messages.
+
+==============
 Version 3.27.1
 ==============
 
