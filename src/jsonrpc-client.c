@@ -1411,8 +1411,12 @@ jsonrpc_client_reply_cb (GObject      *object,
 
 /**
  * jsonrcp_client_reply_async:
+ * @self: a #JsonrpcClient
  * @id: (transfer full) (not nullable): the id of the message to reply
- * result: (transfer full) (nullable): the return value or %NULL
+ * @result: (transfer full) (nullable): the return value or %NULL
+ * @cancellable: a #GCancellable, or %NULL
+ * @callback: (nullable): a #GAsyncReadyCallback or %NULL
+ * @user_data: closure data for @callback
  *
  * This function will reply to a method call identified by @id with the
  * result provided. If @result is %NULL, then a null JSON node is returned
