@@ -875,11 +875,11 @@ jsonrpc_client_call (JsonrpcClient  *self,
  *
  * Asynchronously calls @method with @params on the remote peer.
  *
- * This function takes ownership of @params.
- *
  * Upon completion or failure, @callback is executed and it should
  * call jsonrpc_client_call_finish() to complete the request and release
  * any memory held.
+ *
+ * If @params is floating, the floating reference is consumed.
  *
  * Since: 3.26
  */
@@ -1008,13 +1008,13 @@ jsonrpc_client_send_notification_write_cb (GObject      *object,
  * jsonrpc_client_send_notification:
  * @self: A #JsonrpcClient
  * @method: the name of the method to call
- * @params: (transfer full) (nullable): A #JsonNode of parameters or %NULL
+ * @params: (transfer none) (nullable): A #GVariant of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
  *
  * Synchronously calls @method with @params on the remote peer.
  * This function will not wait or expect a reply from the peer.
  *
- * This function takes ownership of @params.
+ * If @params is floating then the reference is consumed.
  *
  * Returns: %TRUE on success; otherwise %FALSE and @error is set.
  *
@@ -1285,6 +1285,24 @@ jsonrpc_client_reply_error_cb (GObject      *object,
     g_task_return_boolean (task, TRUE);
 }
 
+/**
+ * jsonrpc_client_reply_error_async:
+ * @self: a #JsonrpcClient
+ * @id: (transfer none): a #GVariant containing the call id
+ * @code: the error code
+ * @message: (nullable): an optional error message
+ * @cancellable: (nullable): a #GCancellable, or %NULL
+ * @callback: (nullable): a #GAsyncReadyCallback or %NULL
+ * @user_data: closure data for @callback
+ *
+ * Asynchronously replies to the peer, sending a JSON-RPC error message.
+ *
+ * Call jsonrpc_client_reply_error_finish() to get the result of this operation.
+ *
+ * If @id is floating, it's floating reference is consumed.
+ *
+ * Since: 3.28
+ */
 void
 jsonrpc_client_reply_error_async (JsonrpcClient       *self,
                                   GVariant            *id,
@@ -1350,10 +1368,15 @@ jsonrpc_client_reply_error_finish (JsonrpcClient  *self,
 
 /**
  * jsonrpc_client_reply:
+ * @self: a #JsonrpcClient
  * @id: (transfer none) (not nullable): the id of the message to reply
  * result: (transfer none) (nullable): the return value or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
+ * @error: a #GError, or %NULL
  *
  * Synchronous variant of jsonrpc_client_reply_async().
+ *
+ * If @id or @result are floating, there floating references are consumed.
  *
  * Since: 3.26
  */
@@ -1412,8 +1435,8 @@ jsonrpc_client_reply_cb (GObject      *object,
 /**
  * jsonrcp_client_reply_async:
  * @self: a #JsonrpcClient
- * @id: (transfer full) (not nullable): the id of the message to reply
- * @result: (transfer full) (nullable): the return value or %NULL
+ * @id: (transfer none): the id of the message to reply
+ * @result: (transfer none) (nullable): the return value or %NULL
  * @cancellable: a #GCancellable, or %NULL
  * @callback: (nullable): a #GAsyncReadyCallback or %NULL
  * @user_data: closure data for @callback
@@ -1433,6 +1456,8 @@ jsonrpc_client_reply_cb (GObject      *object,
  * that since the peer does not reply to replies, completion of this
  * asynchronous message does not indicate that the peer has received
  * the message.
+ *
+ * If @id or @result are floating, there floating references are consumed.
  *
  * Since: 3.26
  */
