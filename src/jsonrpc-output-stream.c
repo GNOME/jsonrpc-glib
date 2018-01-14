@@ -313,6 +313,21 @@ jsonrpc_output_stream_write_message_async_cb (GObject      *object,
   jsonrpc_output_stream_pump (self);
 }
 
+/**
+ * jsonrpc_output_stream_write_message_async:
+ * @self: a #JsonrpcOutputStream
+ * @message: (transfer none): a #GVariant
+ * @cancellable: (nullable): a #GCancellable or %NULL
+ * @callback: (nullable): a #GAsyncReadyCallback or %NULL
+ * @user_data: closure data for @callback
+ *
+ * Asynchronously sends a message to the peer.
+ *
+ * This asynchronous operation will complete once the message has
+ * been buffered, and there is no guarantee the peer received it.
+ *
+ * Since: 3.26
+ */
 void
 jsonrpc_output_stream_write_message_async (JsonrpcOutputStream *self,
                                            GVariant            *message,
@@ -374,6 +389,20 @@ jsonrpc_output_stream_write_message_sync_cb (GObject      *object,
     g_task_return_boolean (task, TRUE);
 }
 
+/**
+ * jsonrpc_output_stream_write_message:
+ * @self: a #JsonrpcOutputStream
+ * @message: (transfer none): a #GVariant
+ * @cancellable: (nullable): a #GCancellable or %NULL
+ * @error: a location for a #GError, or %NULL
+ *
+ * Synchronously sends a message to the peer.
+ *
+ * This operation will complete once the message has been buffered. There
+ * is no guarantee the peer received it.
+ *
+ * Since: 3.26
+ */
 gboolean
 jsonrpc_output_stream_write_message (JsonrpcOutputStream  *self,
                                      GVariant             *message,
