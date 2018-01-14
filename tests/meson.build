@@ -54,4 +54,11 @@ test_stress = executable('test-stress', 'test-stress.c',
 )
 test('test-stress', test_stress, env: test_env)
 
+test_gauntlet = executable('test-gauntlet', 'test-gauntlet.c',
+        c_args: test_cflags,
+     link_args: test_link_args,
+  dependencies: test_deps,
+)
+test('test-gauntlet', test_gauntlet, env: test_env)
+
 endif
