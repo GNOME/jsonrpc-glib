@@ -11,7 +11,7 @@ jsonrpc_glib_version_minor = version_arr[1].to_int()
 jsonrpc_glib_version_micro = version_arr[2].to_int()
 
 apiversion = '1.0'
-soversion = 0
+soversion = 1
 
 if jsonrpc_glib_version_minor.is_odd()
   jsonrpc_glib_interface_age = 0
