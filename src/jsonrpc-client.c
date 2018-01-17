@@ -133,6 +133,12 @@ typedef struct
   guint use_gvariant : 1;
 } JsonrpcClientPrivate;
 
+typedef struct
+{
+  GHashTable *invocations;
+  GError *error;
+} PanicData;
+
 G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcClient, jsonrpc_client, G_TYPE_OBJECT)
 
 enum {
@@ -212,6 +218,28 @@ is_jsonrpc_call (GVariantDict *dict)
           g_variant_dict_contains (dict, "params"));
 }
 
+static gboolean
+error_invocations_from_idle (gpointer data)
+{
+  PanicData *pd = data;
+  GHashTableIter iter;
+  GTask *task;
+
+  g_assert (pd != NULL);
+  g_assert (pd->invocations != NULL);
+  g_assert (pd->error != NULL);
+
+  g_hash_table_iter_init (&iter, pd->invocations);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
+    g_task_return_error (task, g_error_copy (pd->error));
+
+  g_clear_pointer (&pd->invocations, g_hash_table_unref);
+  g_clear_pointer (&pd->error, g_error_free);
+  g_slice_free (PanicData, pd);
+
+  return G_SOURCE_REMOVE;
+}
+
 /*
  * jsonrpc_client_panic:
  *
@@ -223,19 +251,27 @@ jsonrpc_client_panic (JsonrpcClient *self,
                       const GError  *error)
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
-  g_autoptr(GHashTable) invocations = NULL;
-  GHashTableIter iter;
-  GTask *task;
+  g_autoptr(JsonrpcClient) hold = NULL;
+  PanicData *pd;
 
   g_assert (JSONRPC_IS_CLIENT (self));
   g_assert (error != NULL);
 
-  g_object_ref (self);
+  hold = g_object_ref (self);
 
   priv->failed = TRUE;
 
-  /* Steal the tasks so that we don't have to worry about reentry. */
-  invocations = g_steal_pointer (&priv->invocations);
+  /*
+   * Defer the completion of all tasks (with errors) until we've made it
+   * back to the main loop. Otherwise, we get into difficult to determine
+   * re-entrancy cases.
+   */
+  pd = g_slice_new0 (PanicData);
+  pd->invocations = g_steal_pointer (&priv->invocations);
+  pd->error = g_error_copy (error);
+  g_idle_add_full (G_PRIORITY_LOW, error_invocations_from_idle, pd, NULL);
+
+  /* Keep a hashtable around for code that expects a pointer there */
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
 
   /* Now close the connection */
@@ -248,17 +284,7 @@ jsonrpc_client_panic (JsonrpcClient *self,
   g_clear_object (&priv->input_stream);
   g_clear_object (&priv->output_stream);
 
-  /*
-   * Now notify all of the in-flight invocations that they failed due
-   * to an unrecoverable error.
-   */
-  g_hash_table_iter_init (&iter, invocations);
-  while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
-    g_task_return_error (task, g_error_copy (error));
-
-  g_signal_emit (self, signals [FAILED], 0);
-
-  g_object_unref (self);
+  g_signal_emit (hold, signals [FAILED], 0);
 }
 
 /*
