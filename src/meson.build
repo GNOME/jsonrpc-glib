@@ -49,7 +49,7 @@ libjsonrpc_glib_sources = [
 ]
 
 libjsonrpc_glib = library(
-  'jsonrpc_glib-' + apiversion,
+  'jsonrpc-glib-' + apiversion,
   libjsonrpc_glib_sources,
 
   dependencies: libjsonrpc_glib_deps,
