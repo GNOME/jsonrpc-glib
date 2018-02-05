@@ -1,3 +1,28 @@
+===============
+Version 3.27.90
+===============
+
+Changes in this release:
+
+ • More documentation and GObject Introspection additions.
+ • Fixes for documentation and taking of floating references from
+   GVariant params.
+ • The soname has been bumped since we altered the correctness of
+   GVariant params. C-based programs mostly just need to be recompiled.
+   Other bindings-based consumers should have their bindings regenerated
+   if necessary.
+ • When panic'ing a connection (such as from a broken pipe) we now
+   defer error propagation back to the main loop to avoid some
+   re-entrancy complexity for applications.
+
+Distributors:
+
+ In this cycle we had to break our GObject Introspection documentation
+ that was correct for the transfer ownership of GVariant. Additionally, we
+ fixed the miss-named library libjsonrpc_glib-1.0 to libjsonrpc-glib-1.0.
+ Since we bumped our soname, it is a good time to fix this in your
+ packaging.
+
 ==============
 Version 3.27.4
 ==============
