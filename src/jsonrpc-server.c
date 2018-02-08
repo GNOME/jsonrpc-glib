@@ -55,6 +55,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (JsonrpcServer, jsonrpc_server, G_TYPE_OBJECT)
 enum {
   HANDLE_CALL,
   NOTIFICATION,
+  CLIENT_ACCEPTED,
   N_SIGNALS
 };
 
@@ -178,6 +179,25 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   JSONRPC_TYPE_CLIENT,
                   G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                   G_TYPE_VARIANT);
+
+    /**
+   * JsonrpcServer::client-accepted:
+   * @self: A #JsonrpcServer
+   * @client: A #JsonrpcClient
+   *
+   * This signal is emitted when a new client has been accepted.
+   *
+   * Since: 3.28
+   */
+  signals [CLIENT_ACCEPTED] =
+    g_signal_new ("client-accepted",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (JsonrpcServerClass, client_accepted),
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE,
+                  1,
+                  JSONRPC_TYPE_CLIENT);
 }
 
 static void
@@ -311,6 +331,8 @@ jsonrpc_server_accept_io_stream (JsonrpcServer *self,
   g_hash_table_insert (priv->clients, client, NULL);
 
   jsonrpc_client_start_listening (client);
+
+  g_signal_emit (self, signals [CLIENT_ACCEPTED], 0, client);
 }
 
 static gint

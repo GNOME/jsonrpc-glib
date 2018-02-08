@@ -43,6 +43,8 @@ struct _JsonrpcServerClass
                             JsonrpcClient *client,
                             const gchar   *method,
                             GVariant      *params);
+  void     (*client_accepted) (JsonrpcServer *self,
+                               JsonrpcClient *client);
 
   gpointer _reserved1;
   gpointer _reserved2;
@@ -51,7 +53,6 @@ struct _JsonrpcServerClass
   gpointer _reserved5;
   gpointer _reserved6;
   gpointer _reserved7;
-  gpointer _reserved8;
 };
 
 typedef void (*JsonrpcServerHandler) (JsonrpcServer *self,
