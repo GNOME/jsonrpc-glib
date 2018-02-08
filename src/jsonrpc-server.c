@@ -194,10 +194,14 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcServerClass, client_accepted),
-                  NULL, NULL, NULL,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__OBJECT,
                   G_TYPE_NONE,
                   1,
                   JSONRPC_TYPE_CLIENT);
+  g_signal_set_va_marshaller (signals [CLIENT_ACCEPTED],
+                              G_TYPE_FROM_CLASS (klass),
+                              g_cclosure_marshal_VOID__OBJECTv);
 }
 
 static void
