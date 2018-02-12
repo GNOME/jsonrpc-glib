@@ -142,9 +142,9 @@ client_call_cb (GObject      *object,
   if (n_ops < 0)
     {
       /* We expect an error here, for the stream being closed */
-      g_assert (error != NULL);
-      g_assert_cmpint (r, ==, 0);
-      g_assert (reply == NULL);
+      g_assert_nonnull (error);
+      g_assert_false (r);
+      g_assert_null (reply);
       g_main_loop_quit (main_loop);
       return;
     }
