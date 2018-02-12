@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 
 #define JSONRPC_TYPE_SERVER (jsonrpc_server_get_type())
 
+JSONRPC_AVAILABLE_IN_3_26
 G_DECLARE_DERIVABLE_TYPE (JsonrpcServer, jsonrpc_server, JSONRPC, SERVER, GObject)
 
 struct _JsonrpcServerClass

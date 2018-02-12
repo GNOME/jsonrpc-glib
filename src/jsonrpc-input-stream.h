@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 #define JSONRPC_TYPE_INPUT_STREAM (jsonrpc_input_stream_get_type())
 
+JSONRPC_AVAILABLE_IN_3_26
 G_DECLARE_DERIVABLE_TYPE (JsonrpcInputStream, jsonrpc_input_stream, JSONRPC, INPUT_STREAM, GDataInputStream)
 
 struct _JsonrpcInputStreamClass

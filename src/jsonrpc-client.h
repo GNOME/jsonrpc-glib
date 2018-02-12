@@ -37,6 +37,7 @@ typedef enum
   JSONRPC_CLIENT_ERROR_INTERNAL_ERROR   = -32603,
 } JsonrpcClientError;
 
+JSONRPC_AVAILABLE_IN_3_26
 G_DECLARE_DERIVABLE_TYPE (JsonrpcClient, jsonrpc_client, JSONRPC, CLIENT, GObject)
 
 struct _JsonrpcClientClass

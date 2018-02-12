@@ -30,11 +30,6 @@ config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'libjsonrpc_glib')
 config_h.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
-configure_file(
-         output: 'config.h',
-  configuration: config_h,
-)
-
 add_project_arguments([
   '-DHAVE_CONFIG_H',
   '-I' + meson.build_root(),
@@ -87,9 +82,29 @@ foreach arg: test_c_args
     global_c_args += arg
   endif
 endforeach
-add_project_arguments(
-  global_c_args,
-  language: 'c'
+
+add_project_arguments(global_c_args, language: 'c')
+
+# Detect and set symbol visibility
+hidden_visibility_args = []
+if get_option('default_library') != 'static'
+  if host_machine.system() == 'windows'
+    config_h.set('DLL_EXPORT', true)
+    if cc.get_id() == 'msvc'
+      config_h.set('_JSONRPC_EXTERN', '__declspec(dllexport) extern')
+    elif cc.has_argument('-fvisibility=hidden')
+      config_h.set('_JSONRPC_EXTERN', '__attribute__((visibility("default"))) __declspec(dllexport) extern')
+      hidden_visibility_args = ['-fvisibility=hidden']
+    endif
+  elif cc.has_argument('-fvisibility=hidden')
+    config_h.set('_JSONRPC_EXTERN', '__attribute__((visibility("default"))) extern')
+    hidden_visibility_args = ['-fvisibility=hidden']
+  endif
+endif
+
+configure_file(
+         output: 'config.h',
+  configuration: config_h,
 )
 
 # Setup various paths that subdirectory meson.build files need

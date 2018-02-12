@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 
 #define JSONRPC_TYPE_OUTPUT_STREAM (jsonrpc_output_stream_get_type())
 
+JSONRPC_AVAILABLE_IN_3_26
 G_DECLARE_DERIVABLE_TYPE (JsonrpcOutputStream, jsonrpc_output_stream, JSONRPC, OUTPUT_STREAM, GDataOutputStream)
 
 struct _JsonrpcOutputStreamClass

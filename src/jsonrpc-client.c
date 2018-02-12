@@ -18,6 +18,8 @@
 
 #define G_LOG_DOMAIN "jsonrpc-client"
 
+#include "config.h"
+
 /**
  * SECTION:jsonrpc-client
  * @title: JsonrpcClient

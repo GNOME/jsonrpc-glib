@@ -18,6 +18,8 @@
 
 #define G_LOG_DOMAIN "jsonrpc-output-stream"
 
+#include "config.h"
+
 #include <string.h>
 
 #include "jsonrpc-output-stream.h"
