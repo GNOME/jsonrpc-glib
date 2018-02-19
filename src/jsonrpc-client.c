@@ -625,8 +625,8 @@ jsonrpc_client_call_write_cb (GObject      *object,
     }
 
   /* We don't need to complete the task because it will get completed when the
-   * server replies with our reply. This is performed using an asynchronous
-   * read that will pump through the messages.
+   * server replies with our return value. This is performed using an
+   * asynchronous read that will pump through incoming messages.
    */
 }
 
