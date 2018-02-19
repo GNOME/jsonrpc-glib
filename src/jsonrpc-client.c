@@ -242,26 +242,15 @@ error_invocations_from_idle (gpointer data)
   return G_SOURCE_REMOVE;
 }
 
-/*
- * jsonrpc_client_panic:
- *
- * This function should be called to "tear down everything" and ensure we
- * cleanup.
- */
 static void
-jsonrpc_client_panic (JsonrpcClient *self,
-                      const GError  *error)
+cancel_pending_from_main (JsonrpcClient *self,
+                          const GError  *error)
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
-  g_autoptr(JsonrpcClient) hold = NULL;
   PanicData *pd;
 
   g_assert (JSONRPC_IS_CLIENT (self));
   g_assert (error != NULL);
-
-  hold = g_object_ref (self);
-
-  priv->failed = TRUE;
 
   /*
    * Defer the completion of all tasks (with errors) until we've made it
@@ -275,6 +264,29 @@ jsonrpc_client_panic (JsonrpcClient *self,
 
   /* Keep a hashtable around for code that expects a pointer there */
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
+}
+
+/*
+ * jsonrpc_client_panic:
+ *
+ * This function should be called to "tear down everything" and ensure we
+ * cleanup.
+ */
+static void
+jsonrpc_client_panic (JsonrpcClient *self,
+                      const GError  *error)
+{
+  JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
+  g_autoptr(JsonrpcClient) hold = NULL;
+
+  g_assert (JSONRPC_IS_CLIENT (self));
+  g_assert (error != NULL);
+
+  hold = g_object_ref (self);
+
+  priv->failed = TRUE;
+
+  cancel_pending_from_main (self, error);
 
   /* Now close the connection */
   jsonrpc_client_close (self, NULL, NULL);
@@ -1190,6 +1202,7 @@ jsonrpc_client_close (JsonrpcClient  *self,
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GHashTable) invocations = NULL;
+  g_autoptr(GError) local_error = NULL;
   gboolean ret;
 
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
@@ -1212,24 +1225,10 @@ jsonrpc_client_close (JsonrpcClient  *self,
    * Closing the input stream will fail, so just rely on the callback
    * from the async function to complete/close the stream.
    */
-
-  invocations = g_steal_pointer (&priv->invocations);
-  priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
-
-  if (g_hash_table_size (invocations) > 0)
-    {
-      g_autoptr(GError) local_error = NULL;
-      GTask *task;
-      GHashTableIter iter;
-
-      local_error = g_error_new_literal (G_IO_ERROR,
-                                         G_IO_ERROR_CLOSED,
-                                         "The underlying stream was closed");
-
-      g_hash_table_iter_init (&iter, invocations);
-      while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
-        g_task_return_error (task, g_error_copy (local_error));
-    }
+  local_error = g_error_new_literal (G_IO_ERROR,
+                                     G_IO_ERROR_CLOSED,
+                                     "The underlying stream was closed");
+  cancel_pending_from_main (self, local_error);
 
   g_signal_emit (self, signals [FAILED], 0);
 
