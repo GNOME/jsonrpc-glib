@@ -618,9 +618,8 @@ jsonrpc_client_call_write_cb (GObject      *object,
 
   if (!jsonrpc_output_stream_write_message_finish (stream, result, &error))
     {
-      jsonrpc_client_remove_from_invocations (self, task);
+      /* Panic will cancel our task, no need to return error here */
       jsonrpc_client_panic (self, error);
-      g_task_return_error (task, g_steal_pointer (&error));
       return;
     }
 
