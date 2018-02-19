@@ -670,6 +670,9 @@ jsonrpc_client_call_read_cb (GObject      *object,
   /* Make sure we got a proper type back from the variant. */
   if (!g_variant_is_of_type (message, G_VARIANT_TYPE_VARDICT))
     {
+      error = g_error_new_literal (G_IO_ERROR,
+                                   G_IO_ERROR_INVALID_DATA,
+                                   "Improper reply from peer, not a vardict");
       jsonrpc_client_panic (self, error);
       return;
     }
@@ -685,7 +688,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
     {
       error = g_error_new_literal (G_IO_ERROR,
                                    G_IO_ERROR_INVALID_DATA,
-                                   "Received malformed response from peer");
+                                   "Improper reply from peer");
       jsonrpc_client_panic (self, error);
       return;
     }
