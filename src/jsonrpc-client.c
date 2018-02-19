@@ -751,9 +751,9 @@ jsonrpc_client_call_read_cb (GObject      *object,
       if (!g_variant_dict_lookup (&dict, "method", "&s", &method_name) ||
           NULL == (id = g_variant_dict_lookup_value (&dict, "id", NULL)))
         {
-          error = g_error_new (G_IO_ERROR,
-                               G_IO_ERROR_INVALID_DATA,
-                               "Call contains invalid method or id field");
+          error = g_error_new_literal (G_IO_ERROR,
+                                       G_IO_ERROR_INVALID_DATA,
+                                       "Call contains invalid method or id field");
           jsonrpc_client_panic (self, error);
           return;
         }
