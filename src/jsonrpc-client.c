@@ -648,11 +648,9 @@ jsonrpc_client_call_read_cb (GObject      *object,
   if (!jsonrpc_input_stream_read_message_finish (stream, result, &message, &error))
     {
       /* Handle jsonrpc_client_close() conditions gracefully. */
-      if (priv->in_shutdown && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-        {
-          g_io_stream_close (priv->io_stream, NULL, NULL);
-          return;
-        }
+      if (priv->in_shutdown &&
+          g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        return;
 
       /*
        * If we fail to read a message, that means we couldn't even receive
