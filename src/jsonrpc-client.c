@@ -572,7 +572,7 @@ jsonrpc_client_new (GIOStream *io_stream)
 }
 
 static void
-jsonrpc_client_remove_from_invocatoins (JsonrpcClient *self,
+jsonrpc_client_remove_from_invocations (JsonrpcClient *self,
                                         GTask         *task)
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
@@ -596,7 +596,7 @@ jsonrpc_client_call_notify_completed (JsonrpcClient *self,
   g_assert (g_str_equal (pspec->name, "completed"));
   g_assert (G_IS_TASK (task));
 
-  jsonrpc_client_remove_from_invocatoins (self, task);
+  jsonrpc_client_remove_from_invocations (self, task);
 }
 
 static void
@@ -618,7 +618,7 @@ jsonrpc_client_call_write_cb (GObject      *object,
 
   if (!jsonrpc_output_stream_write_message_finish (stream, result, &error))
     {
-      jsonrpc_client_remove_from_invocatoins (self, task);
+      jsonrpc_client_remove_from_invocations (self, task);
       jsonrpc_client_panic (self, error);
       g_task_return_error (task, g_steal_pointer (&error));
       return;
