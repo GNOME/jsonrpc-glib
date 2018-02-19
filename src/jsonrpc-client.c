@@ -285,8 +285,6 @@ jsonrpc_client_panic (JsonrpcClient *self,
    */
   g_clear_object (&priv->input_stream);
   g_clear_object (&priv->output_stream);
-
-  g_signal_emit (hold, signals [FAILED], 0);
 }
 
 /*
