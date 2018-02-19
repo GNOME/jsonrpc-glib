@@ -271,7 +271,7 @@ jsonrpc_client_panic (JsonrpcClient *self,
   pd = g_slice_new0 (PanicData);
   pd->invocations = g_steal_pointer (&priv->invocations);
   pd->error = g_error_copy (error);
-  g_idle_add_full (G_PRIORITY_LOW, error_invocations_from_idle, pd, NULL);
+  g_idle_add_full (G_MAXINT, error_invocations_from_idle, pd, NULL);
 
   /* Keep a hashtable around for code that expects a pointer there */
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
