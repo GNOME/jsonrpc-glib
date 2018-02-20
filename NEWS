@@ -1,4 +1,15 @@
 ===============
+Version 3.27.91
+===============
+
+Changes in this release:
+
+ • Add JsonrpcServer::client-accepted signal.
+ • Improvements to dispatching of errors when panic'ing the connection.
+ • Message parsing is more liberal in what it accepts as input.
+ • Default ABI visibility was set to hidden, making our ABI macros useful.
+
+===============
 Version 3.27.90
 ===============
 
