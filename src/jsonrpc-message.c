@@ -564,8 +564,11 @@ jsonrpc_message_parse (GVariant *message,
   gboolean ret;
   va_list args;
 
-  g_return_val_if_fail (message != NULL, FALSE);
-  g_return_val_if_fail (g_variant_is_of_type (message, G_VARIANT_TYPE ("a{sv}")), FALSE);
+  if (message == NULL)
+    return FALSE;
+
+  if (!g_variant_is_of_type (message, G_VARIANT_TYPE ("a{sv}")))
+    return FALSE;
 
   va_start (args, message);
   ret = jsonrpc_message_parse_valist (message, &args);
