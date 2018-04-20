@@ -384,7 +384,40 @@ jsonrpc_message_parse_object (GVariantDict *dict,
         }
     }
   else if (IS_GET_STRV (valptr))
-    ret = g_variant_dict_lookup (dict, key, "^as", ((JsonrpcMessageGetStrv *)valptr)->valptr);
+    {
+      g_autoptr(GVariant) v = g_variant_dict_lookup_value (dict, key, NULL);
+
+      if (v != NULL)
+        {
+          if (g_variant_is_of_type (v, G_VARIANT_TYPE ("as")))
+            {
+              *((JsonrpcMessageGetStrv *)valptr)->valptr = g_variant_dup_strv (v, NULL);
+              ret = TRUE;
+            }
+          else if (g_variant_is_of_type (v, G_VARIANT_TYPE ("av")))
+            {
+              GPtrArray *ar = g_ptr_array_new ();
+              GVariantIter iter;
+              GVariant *item;
+
+              g_variant_iter_init (&iter, v);
+              while ((item = g_variant_iter_next_value (&iter)))
+                {
+                  GVariant *unwrap = g_variant_get_variant (item);
+
+                  if (g_variant_is_of_type (unwrap, G_VARIANT_TYPE_STRING))
+                    g_ptr_array_add (ar, g_variant_dup_string (unwrap, NULL));
+
+                  g_variant_unref (unwrap);
+                  g_variant_unref (item);
+                }
+              g_ptr_array_add (ar, NULL);
+
+              *((JsonrpcMessageGetStrv *)valptr)->valptr = (gchar **)g_ptr_array_free (ar, FALSE);
+              ret = TRUE;
+            }
+        }
+    }
   else if (IS_GET_INT32 (valptr))
     ret = g_variant_dict_lookup (dict, key, "i", ((JsonrpcMessageGetInt32 *)valptr)->valptr);
   else if (IS_GET_INT64 (valptr))
