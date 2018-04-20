@@ -35,25 +35,27 @@ struct _JsonrpcServerClass
 {
   GObjectClass parent_class;
 
-  gboolean (*handle_call)  (JsonrpcServer *self,
-                            JsonrpcClient *client,
-                            const gchar   *method,
-                            GVariant      *id,
-                            GVariant      *params);
-  void     (*notification) (JsonrpcServer *self,
-                            JsonrpcClient *client,
-                            const gchar   *method,
-                            GVariant      *params);
+  gboolean (*handle_call)     (JsonrpcServer *self,
+                               JsonrpcClient *client,
+                               const gchar   *method,
+                               GVariant      *id,
+                               GVariant      *params);
+  void     (*notification)    (JsonrpcServer *self,
+                               JsonrpcClient *client,
+                               const gchar   *method,
+                               GVariant      *params);
   void     (*client_accepted) (JsonrpcServer *self,
                                JsonrpcClient *client);
+  void     (*client_closed)   (JsonrpcServer *self,
+                               JsonrpcClient *client);
 
+  /*< private >*/
   gpointer _reserved1;
   gpointer _reserved2;
   gpointer _reserved3;
   gpointer _reserved4;
   gpointer _reserved5;
   gpointer _reserved6;
-  gpointer _reserved7;
 };
 
 typedef void (*JsonrpcServerHandler) (JsonrpcServer *self,

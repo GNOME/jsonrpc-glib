@@ -58,6 +58,7 @@ enum {
   HANDLE_CALL,
   NOTIFICATION,
   CLIENT_ACCEPTED,
+  CLIENT_CLOSED,
   N_SIGNALS
 };
 
@@ -182,7 +183,7 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                   G_TYPE_VARIANT);
 
-    /**
+  /**
    * JsonrpcServer::client-accepted:
    * @self: A #JsonrpcServer
    * @client: A #JsonrpcClient
@@ -202,6 +203,29 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   1,
                   JSONRPC_TYPE_CLIENT);
   g_signal_set_va_marshaller (signals [CLIENT_ACCEPTED],
+                              G_TYPE_FROM_CLASS (klass),
+                              g_cclosure_marshal_VOID__OBJECTv);
+
+  /**
+   * JsonrpcServer::client-closed:
+   * @self: A #JsonrpcServer
+   * @client: A #JsonrpcClient
+   *
+   * This signal is emitted when a new client has been lost.
+   *
+   * Since: 3.30
+   */
+  signals [CLIENT_CLOSED] =
+    g_signal_new ("client-closed",
+                  G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (JsonrpcServerClass, client_closed),
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__OBJECT,
+                  G_TYPE_NONE,
+                  1,
+                  JSONRPC_TYPE_CLIENT);
+  g_signal_set_va_marshaller (signals [CLIENT_CLOSED],
                               G_TYPE_FROM_CLASS (klass),
                               g_cclosure_marshal_VOID__OBJECTv);
 }
@@ -255,6 +279,7 @@ jsonrpc_server_client_failed (JsonrpcServer *self,
        */
       g_debug ("Lost connection to client [%p]", client);
       g_hash_table_steal (priv->clients, client);
+      g_signal_emit (self, signals [CLIENT_CLOSED], 0, client);
       g_idle_add_full (G_MAXINT, dummy_func, client, g_object_unref);
     }
 }
