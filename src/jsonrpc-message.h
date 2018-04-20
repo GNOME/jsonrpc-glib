@@ -44,6 +44,12 @@ typedef struct
 typedef struct
 {
   JsonrpcMessageMagic magic;
+  const char * const *val;
+} JsonrpcMessagePutStrv __attribute__((aligned (8)));
+
+typedef struct
+{
+  JsonrpcMessageMagic magic;
   const char **valptr;
 } JsonrpcMessageGetString __attribute__((aligned (8)));
 
@@ -118,6 +124,7 @@ typedef struct
 
 #define _JSONRPC_MESSAGE_PUT_STRING_MAGIC  _JSONRPC_MAGIC("PUTS")
 #define _JSONRPC_MESSAGE_GET_STRING_MAGIC  _JSONRPC_MAGIC("GETS")
+#define _JSONRPC_MESSAGE_PUT_STRV_MAGIC    _JSONRPC_MAGIC("PUTZ")
 #define _JSONRPC_MESSAGE_PUT_INT32_MAGIC   _JSONRPC_MAGIC("PUTI")
 #define _JSONRPC_MESSAGE_GET_INT32_MAGIC   _JSONRPC_MAGIC("GETI")
 #define _JSONRPC_MESSAGE_PUT_INT64_MAGIC   _JSONRPC_MAGIC("PUTX")
@@ -132,6 +139,7 @@ typedef struct
 
 #define _JSONRPC_MESSAGE_PUT_STRING_MAGIC_C  _JSONRPC_MAGIC_C('P','U','T','S')
 #define _JSONRPC_MESSAGE_GET_STRING_MAGIC_C  _JSONRPC_MAGIC_C('G','E','T','S')
+#define _JSONRPC_MESSAGE_PUT_STRV_MAGIC_C    _JSONRPC_MAGIC_C('P','U','T','Z')
 #define _JSONRPC_MESSAGE_PUT_INT32_MAGIC_C   _JSONRPC_MAGIC_C('P','U','T','I')
 #define _JSONRPC_MESSAGE_GET_INT32_MAGIC_C   _JSONRPC_MAGIC_C('G','E','T','I')
 #define _JSONRPC_MESSAGE_PUT_INT64_MAGIC_C   _JSONRPC_MAGIC_C('P','U','T','X')
@@ -157,6 +165,9 @@ typedef struct
   (&((JsonrpcMessagePutString) { .magic = {_JSONRPC_MESSAGE_PUT_STRING_MAGIC_C}, .val = _val }))
 #define JSONRPC_MESSAGE_GET_STRING(_valptr) \
   (&((JsonrpcMessageGetString) { .magic = {_JSONRPC_MESSAGE_GET_STRING_MAGIC_C}, .valptr = _valptr }))
+
+#define JSONRPC_MESSAGE_PUT_STRV(_val) \
+  (&((JsonrpcMessagePutStrv) { .magic = {_JSONRPC_MESSAGE_PUT_STRV_MAGIC_C}, .val = _val }))
 
 #define JSONRPC_MESSAGE_PUT_INT32(_val) \
   (&((JsonrpcMessagePutInt32) { .magic = {_JSONRPC_MESSAGE_PUT_INT32_MAGIC_C}, .val = _val }))

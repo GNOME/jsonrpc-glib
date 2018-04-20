@@ -40,6 +40,7 @@
             sizeof ((_any)->magic.bytes)) == 0)
 
 #define IS_PUT_STRING(_any)  COMPARE_MAGIC(_any, PUT_STRING)
+#define IS_PUT_STRV(_any)    COMPARE_MAGIC(_any, PUT_STRV)
 #define IS_PUT_INT32(_any)   COMPARE_MAGIC(_any, PUT_INT32)
 #define IS_PUT_INT64(_any)   COMPARE_MAGIC(_any, PUT_INT64)
 #define IS_PUT_BOOLEAN(_any) COMPARE_MAGIC(_any, PUT_BOOLEAN)
@@ -136,6 +137,8 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
           else
             g_variant_builder_add (builder, "ms", NULL);
         }
+      else if (IS_PUT_STRV (valptr))
+        g_variant_builder_add (builder, "^as", ((JsonrpcMessagePutStrv *)valptr)->val);
       else if (IS_PUT_INT32 (valptr))
         g_variant_builder_add (builder, "i", ((JsonrpcMessagePutInt32 *)valptr)->val);
       else if (IS_PUT_INT64 (valptr))

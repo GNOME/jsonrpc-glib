@@ -236,6 +236,18 @@ test_null_string (void)
   g_assert_cmpstr (content_type, ==, NULL);
 }
 
+static void
+test_strv (void)
+{
+  g_autoptr(GVariant) src = NULL;
+  static const gchar *ar[] = { "a", "b", "c", NULL };
+  g_autofree gchar *print = NULL;
+
+  src = JSONRPC_MESSAGE_NEW ("key", JSONRPC_MESSAGE_PUT_STRV (ar));
+  print = g_variant_print (src, TRUE);
+  g_assert_cmpstr (print, ==, "{'key': <['a', 'b', 'c']>}");
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -251,5 +263,6 @@ main (gint argc,
   g_test_add_func ("/Jsonrpc/Message/new_array", test_new_array);
   g_test_add_func ("/Jsonrpc/Message/new_array_objs", test_new_array_objs);
   g_test_add_func ("/Jsonrpc/Message/null_string", test_null_string);
+  g_test_add_func ("/Jsonrpc/Message/strv", test_strv);
   return g_test_run ();
 }
