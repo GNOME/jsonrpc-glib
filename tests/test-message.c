@@ -241,11 +241,21 @@ test_strv (void)
 {
   g_autoptr(GVariant) src = NULL;
   static const gchar *ar[] = { "a", "b", "c", NULL };
+  g_auto(GStrv) get_ar = NULL;
   g_autofree gchar *print = NULL;
+  gboolean r;
 
   src = JSONRPC_MESSAGE_NEW ("key", JSONRPC_MESSAGE_PUT_STRV (ar));
   print = g_variant_print (src, TRUE);
   g_assert_cmpstr (print, ==, "{'key': <['a', 'b', 'c']>}");
+
+  r = JSONRPC_MESSAGE_PARSE (src, "key", JSONRPC_MESSAGE_GET_STRV (&get_ar));
+  g_assert_true (r);
+  g_assert_nonnull (get_ar);
+  g_assert_cmpstr (get_ar[0], ==, "a");
+  g_assert_cmpstr (get_ar[1], ==, "b");
+  g_assert_cmpstr (get_ar[2], ==, "c");
+  g_assert_null (get_ar[3]);
 }
 
 gint

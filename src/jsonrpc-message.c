@@ -47,6 +47,7 @@
 #define IS_PUT_DOUBLE(_any)  COMPARE_MAGIC(_any, PUT_DOUBLE)
 
 #define IS_GET_STRING(_any)  COMPARE_MAGIC(_any, GET_STRING)
+#define IS_GET_STRV(_any)    COMPARE_MAGIC(_any, GET_STRV)
 #define IS_GET_INT32(_any)   COMPARE_MAGIC(_any, GET_INT32)
 #define IS_GET_INT64(_any)   COMPARE_MAGIC(_any, GET_INT64)
 #define IS_GET_BOOLEAN(_any) COMPARE_MAGIC(_any, GET_BOOLEAN)
@@ -382,6 +383,8 @@ jsonrpc_message_parse_object (GVariantDict *dict,
             }
         }
     }
+  else if (IS_GET_STRV (valptr))
+    ret = g_variant_dict_lookup (dict, key, "^as", ((JsonrpcMessageGetStrv *)valptr)->valptr);
   else if (IS_GET_INT32 (valptr))
     ret = g_variant_dict_lookup (dict, key, "i", ((JsonrpcMessageGetInt32 *)valptr)->valptr);
   else if (IS_GET_INT64 (valptr))
