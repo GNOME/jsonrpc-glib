@@ -128,6 +128,12 @@ typedef struct
   guint failed : 1;
 
   /*
+   * Only set once we've emitted the ::failed signal (so we only do that
+   * a single time).
+   */
+  guint emitted_failed : 1;
+
+  /*
    * If we should try to use gvariant encoding when communicating with
    * our peer. This is helpful to be able to lower parser and memory
    * overhead.
@@ -266,6 +272,22 @@ cancel_pending_from_main (JsonrpcClient *self,
   priv->invocations = g_hash_table_new_full (NULL, NULL, NULL, g_object_unref);
 }
 
+static gboolean
+emit_failed_from_main (JsonrpcClient *self)
+{
+  JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
+
+  g_assert (JSONRPC_IS_CLIENT (self));
+
+  if (!priv->emitted_failed)
+    {
+      priv->emitted_failed = TRUE;
+      g_signal_emit (self, signals [FAILED], 0);
+    }
+
+  return G_SOURCE_REMOVE;
+}
+
 /*
  * jsonrpc_client_panic:
  *
@@ -297,6 +319,16 @@ jsonrpc_client_panic (JsonrpcClient *self,
    */
   g_clear_object (&priv->input_stream);
   g_clear_object (&priv->output_stream);
+
+  /*
+   * Queue a "failed" signal from a main loop callback so that we don't
+   * get the client into weird stuff from signal callbacks here.
+   */
+  if (!priv->emitted_failed)
+    g_idle_add_full (G_MAXINT,
+                     (GSourceFunc)emit_failed_from_main,
+                     g_object_ref (self),
+                     g_object_unref);
 }
 
 /*
@@ -1230,7 +1262,7 @@ jsonrpc_client_close (JsonrpcClient  *self,
                                      "The underlying stream was closed");
   cancel_pending_from_main (self, local_error);
 
-  g_signal_emit (self, signals [FAILED], 0);
+  emit_failed_from_main (self);
 
   return ret;
 }
