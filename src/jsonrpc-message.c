@@ -139,7 +139,12 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
             g_variant_builder_add (builder, "ms", NULL);
         }
       else if (IS_PUT_STRV (valptr))
-        g_variant_builder_add (builder, "^as", ((JsonrpcMessagePutStrv *)valptr)->val);
+        {
+          if (((JsonrpcMessagePutStrv *)valptr)->val != NULL)
+            g_variant_builder_add (builder, "^as", ((JsonrpcMessagePutStrv *)valptr)->val);
+          else
+            g_variant_builder_add (builder, "mas", NULL);
+        }
       else if (IS_PUT_INT32 (valptr))
         g_variant_builder_add (builder, "i", ((JsonrpcMessagePutInt32 *)valptr)->val);
       else if (IS_PUT_INT64 (valptr))
@@ -414,6 +419,13 @@ jsonrpc_message_parse_object (GVariantDict *dict,
               g_ptr_array_add (ar, NULL);
 
               *((JsonrpcMessageGetStrv *)valptr)->valptr = (gchar **)g_ptr_array_free (ar, FALSE);
+              ret = TRUE;
+            }
+          else if (g_variant_is_of_type (v, G_VARIANT_TYPE ("mav")) ||
+                   g_variant_is_of_type (v, G_VARIANT_TYPE ("mas")) ||
+                   g_variant_is_of_type (v, G_VARIANT_TYPE ("mv")))
+            {
+              *((JsonrpcMessageGetStrv *)valptr)->valptr = NULL;
               ret = TRUE;
             }
         }

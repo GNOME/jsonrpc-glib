@@ -258,6 +258,39 @@ test_strv (void)
   g_assert_null (get_ar[3]);
 }
 
+static void
+test_null_strv (void)
+{
+  g_autoptr(GVariant) src = NULL;
+  g_auto(GStrv) get_ar = NULL;
+  g_auto(GStrv) get_ar_from_v = NULL;
+  g_autofree gchar *print = NULL;
+  g_autoptr(JsonNode) node = NULL;
+  g_autoptr(GError) error = NULL;
+  g_autoptr(GVariant) v = NULL;
+  gboolean r;
+
+  src = JSONRPC_MESSAGE_NEW ("key", JSONRPC_MESSAGE_PUT_STRV (NULL));
+  print = g_variant_print (src, TRUE);
+  g_assert_cmpstr (print, ==, "{'key': <@mas nothing>}");
+
+  r = JSONRPC_MESSAGE_PARSE (src, "key", JSONRPC_MESSAGE_GET_STRV (&get_ar));
+  g_assert_true (r);
+  g_assert_null (get_ar);
+
+  node = json_from_string ("{'key': null}", &error);
+  g_assert_no_error (error);
+  g_assert_nonnull (node);
+
+  v = json_gvariant_deserialize (node, NULL, &error);
+  g_assert_no_error (error);
+  g_assert_nonnull (v);
+
+  r = JSONRPC_MESSAGE_PARSE (v, "key", JSONRPC_MESSAGE_GET_STRV (&get_ar_from_v));
+  g_assert_true (r);
+  g_assert_null (get_ar_from_v);
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -274,5 +307,6 @@ main (gint argc,
   g_test_add_func ("/Jsonrpc/Message/new_array_objs", test_new_array_objs);
   g_test_add_func ("/Jsonrpc/Message/null_string", test_null_string);
   g_test_add_func ("/Jsonrpc/Message/strv", test_strv);
+  g_test_add_func ("/Jsonrpc/Message/null_strv", test_null_strv);
   return g_test_run ();
 }
