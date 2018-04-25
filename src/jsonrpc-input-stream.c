@@ -130,6 +130,12 @@ jsonrpc_input_stream_read_body_cb (GObject      *object,
                                          g_free,
                                          state->buffer);
       state->buffer = NULL;
+
+      if G_UNLIKELY (jsonrpc_input_stream_debug && state->use_gvariant)
+        {
+          g_autofree gchar *debugstr = g_variant_print (message, TRUE);
+          g_message ("<<< %s", debugstr);
+        }
     }
   else
     {
