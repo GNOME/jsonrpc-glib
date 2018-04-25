@@ -612,11 +612,15 @@ gboolean
 jsonrpc_message_parse (GVariant *message,
                        ...)
 {
+  g_autoptr(GVariant) unboxed = NULL;
   gboolean ret;
   va_list args;
 
   if (message == NULL)
     return FALSE;
+
+  if (g_variant_is_of_type (message, G_VARIANT_TYPE_VARIANT))
+    message = unboxed = g_variant_get_variant (message);
 
   if (!g_variant_is_of_type (message, G_VARIANT_TYPE ("a{sv}")))
     return FALSE;
