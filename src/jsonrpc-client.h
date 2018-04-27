@@ -91,6 +91,14 @@ gboolean       jsonrpc_client_call                     (JsonrpcClient        *se
                                                         GCancellable         *cancellable,
                                                         GVariant            **return_value,
                                                         GError              **error);
+JSONRPC_AVAILABLE_IN_3_30
+void           jsonrpc_client_call_with_id_async       (JsonrpcClient        *self,
+                                                        const gchar          *method,
+                                                        GVariant             *params,
+                                                        GVariant            **id,
+                                                        GCancellable         *cancellable,
+                                                        GAsyncReadyCallback   callback,
+                                                        gpointer              user_data);
 JSONRPC_AVAILABLE_IN_3_26
 void           jsonrpc_client_call_async               (JsonrpcClient        *self,
                                                         const gchar          *method,
