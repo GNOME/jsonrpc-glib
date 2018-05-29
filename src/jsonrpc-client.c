@@ -879,7 +879,7 @@ jsonrpc_client_call_sync_cb (GObject      *object,
  * @method: the name of the method to call
  * @params: (transfer none) (nullable): A #GVariant of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
- * @return_value: (nullable) (out): A location for a #JsonNode.
+ * @return_value: (nullable) (out): A location for a #GVariant
  *
  * Synchronously calls @method with @params on the remote peer.
  *
@@ -938,7 +938,7 @@ jsonrpc_client_call (JsonrpcClient  *self,
  * jsonrpc_client_call_with_id_async:
  * @self: A #JsonrpcClient
  * @method: the name of the method to call
- * @params: (transfer none) (nullable): A #JsonNode of parameters or %NULL
+ * @params: (transfer none) (nullable): A #GVariant of parameters or %NULL
  * @id: (out) (transfer full) (optional): a location for a #GVariant
  *   describing the identifier used for the method call, or %NULL.
  * @cancellable: (nullable): A #GCancellable or %NULL
@@ -1033,7 +1033,7 @@ jsonrpc_client_call_with_id_async (JsonrpcClient       *self,
  * jsonrpc_client_call_async:
  * @self: A #JsonrpcClient
  * @method: the name of the method to call
- * @params: (transfer none) (nullable): A #JsonNode of parameters or %NULL
+ * @params: (transfer none) (nullable): A #GVariant of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
  * @callback: a callback to executed upon completion
  * @user_data: user data for @callback
@@ -1063,7 +1063,7 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
  * jsonrpc_client_call_finish:
  * @self: A #JsonrpcClient.
  * @result: A #GAsyncResult provided to the callback in jsonrpc_client_call_async()
- * @return_value: (out) (nullable): A location for a #JsonNode or %NULL
+ * @return_value: (out) (nullable): A location for a #GVariant or %NULL
  * @error: a location for a #GError or %NULL
  *
  * Completes an asynchronous call to jsonrpc_client_call_async().
@@ -1078,7 +1078,7 @@ jsonrpc_client_call_finish (JsonrpcClient  *self,
                             GVariant      **return_value,
                             GError        **error)
 {
-  g_autoptr(JsonNode) local_return_value = NULL;
+  g_autoptr(GVariant) local_return_value = NULL;
   gboolean ret;
 
   g_return_val_if_fail (JSONRPC_IS_CLIENT (self), FALSE);
