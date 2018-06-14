@@ -1471,7 +1471,7 @@ jsonrpc_client_reply_error_finish (JsonrpcClient  *self,
  * jsonrpc_client_reply:
  * @self: a #JsonrpcClient
  * @id: (transfer none) (not nullable): the id of the message to reply
- * result: (transfer none) (nullable): the return value or %NULL
+ * @result: (transfer none) (nullable): the return value or %NULL
  * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
  *
