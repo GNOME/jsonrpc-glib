@@ -57,10 +57,10 @@
 #define IS_GET_VARIANT(_any) COMPARE_MAGIC(_any, GET_VARIANT)
 
 static void     jsonrpc_message_build_object   (GVariantBuilder *builder,
-                                                gpointer         param,
+                                                gconstpointer    param,
                                                 va_list         *args);
 static void     jsonrpc_message_build_array    (GVariantBuilder *builder,
-                                                gpointer         param,
+                                                gconstpointer    param,
                                                 va_list         *args);
 static gboolean jsonrpc_message_parse_object   (GVariantDict    *dict,
                                                 gpointer         param,
@@ -71,10 +71,10 @@ static gboolean jsonrpc_message_parse_array_va (GVariantIter    *iter,
 
 static void
 jsonrpc_message_build_object (GVariantBuilder *builder,
-                              gpointer         param,
+                              gconstpointer    param,
                               va_list         *args)
 {
-  JsonrpcMessageAny *keyptr = param;
+  const JsonrpcMessageAny *keyptr = param;
   JsonrpcMessageAny *valptr;
   const char *key;
 
@@ -96,7 +96,7 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
    * we assume it is a raw key name like "foo".
    */
   if (IS_PUT_STRING (keyptr))
-    key = ((JsonrpcMessagePutString *)keyptr)->val;
+    key = ((const JsonrpcMessagePutString *)keyptr)->val;
   else
     key = (const char *)keyptr;
 
@@ -105,7 +105,7 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
   /*
    * Now try to read the value for the key/val pair.
    */
-  valptr = param = va_arg (*args, gpointer);
+  valptr = va_arg (*args, gpointer);
 
   g_variant_builder_open (builder, G_VARIANT_TYPE ("v"));
 
@@ -113,14 +113,14 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
     {
     case '{':
       g_variant_builder_open (builder, G_VARIANT_TYPE ("a{sv}"));
-      param = va_arg (*args, gpointer);
+      param = va_arg (*args, gconstpointer);
       jsonrpc_message_build_object (builder, param, args);
       g_variant_builder_close (builder);
       break;
 
     case '[':
       g_variant_builder_open (builder, G_VARIANT_TYPE ("av"));
-      param = va_arg (*args, gpointer);
+      param = va_arg (*args, gconstpointer);
       jsonrpc_message_build_array (builder, param, args);
       g_variant_builder_close (builder);
       break;
@@ -164,7 +164,7 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
   /*
    * Try to build the next field in the object if there is one.
    */
-  param = va_arg (*args, gpointer);
+  param = va_arg (*args, gconstpointer);
   jsonrpc_message_build_object (builder, param, args);
 
   EXIT;
@@ -172,10 +172,10 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
 
 static void
 jsonrpc_message_build_array (GVariantBuilder *builder,
-                             gpointer         param,
+                             gconstpointer    param,
                              va_list         *args)
 {
-  JsonrpcMessageAny *valptr = param;
+  const JsonrpcMessageAny *valptr = param;
 
   ENTRY;
 
@@ -189,14 +189,14 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
     {
     case '{':
       g_variant_builder_open (builder, G_VARIANT_TYPE ("a{sv}"));
-      param = va_arg (*args, gpointer);
+      param = va_arg (*args, gconstpointer);
       jsonrpc_message_build_object (builder, param, args);
       g_variant_builder_close (builder);
       break;
 
     case '[':
       g_variant_builder_open (builder, G_VARIANT_TYPE ("av"));
-      param = va_arg (*args, gpointer);
+      param = va_arg (*args, gconstpointer);
       jsonrpc_message_build_array (builder, param, args);
       g_variant_builder_close (builder);
       break;
@@ -229,7 +229,7 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
 
   g_variant_builder_close (builder);
 
-  param = va_arg (*args, gpointer);
+  param = va_arg (*args, gconstpointer);
   if (param != NULL)
     jsonrpc_message_build_array (builder, param, args);
 
@@ -237,8 +237,8 @@ jsonrpc_message_build_array (GVariantBuilder *builder,
 }
 
 static GVariant *
-jsonrpc_message_new_valist (gpointer  first_param,
-                            va_list  *args)
+jsonrpc_message_new_valist (gconstpointer  first_param,
+                            va_list       *args)
 {
   GVariantBuilder builder;
 
@@ -251,7 +251,7 @@ jsonrpc_message_new_valist (gpointer  first_param,
 }
 
 GVariant *
-jsonrpc_message_new (gpointer first_param,
+jsonrpc_message_new (gconstpointer first_param,
                      ...)
 {
   GVariant *ret;
@@ -270,8 +270,8 @@ jsonrpc_message_new (gpointer first_param,
 }
 
 static GVariant *
-jsonrpc_message_new_array_valist (gpointer  first_param,
-                                  va_list  *args)
+jsonrpc_message_new_array_valist (gconstpointer  first_param,
+                                  va_list       *args)
 {
   GVariantBuilder builder;
 
@@ -284,7 +284,7 @@ jsonrpc_message_new_array_valist (gpointer  first_param,
 }
 
 GVariant *
-jsonrpc_message_new_array (gpointer first_param,
+jsonrpc_message_new_array (gconstpointer first_param,
                            ...)
 {
   GVariant *ret;

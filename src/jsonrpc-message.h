@@ -209,10 +209,10 @@ typedef struct
   (&((JsonrpcMessageGetVariant) { .magic = {_JSONRPC_MESSAGE_GET_VARIANT_MAGIC_C}, .variantptr = _valptr }))
 
 JSONRPC_AVAILABLE_IN_3_26
-GVariant *jsonrpc_message_new         (gpointer first_param, ...) G_GNUC_NULL_TERMINATED;
+GVariant *jsonrpc_message_new         (gconstpointer first_param, ...) G_GNUC_NULL_TERMINATED;
 
 JSONRPC_AVAILABLE_IN_3_26
-GVariant *jsonrpc_message_new_array   (gpointer first_param, ...) G_GNUC_NULL_TERMINATED;
+GVariant *jsonrpc_message_new_array   (gconstpointer first_param, ...) G_GNUC_NULL_TERMINATED;
 
 JSONRPC_AVAILABLE_IN_3_26
 gboolean  jsonrpc_message_parse       (GVariant *message, ...) G_GNUC_NULL_TERMINATED;
