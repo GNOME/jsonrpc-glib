@@ -1,4 +1,20 @@
 ==============
+Version 3.29.3
+==============
+
+Changes in this release:
+
+ • Various introspection fixes
+ • Add JsonrpcServer::client-closed
+ • Emit JsonrpcClient::failed upon panic
+ • Helpers for strv message building and parsing
+ • Output stream now tracks busy status
+ • Support for boxing/unboxing a{sv} variants
+ • Version ABI macros were added
+ • A new variant for calling a remote method and get message id
+ • Fixes for an invalid type propagation
+
+==============
 Version 3.28.0
 ==============
 
