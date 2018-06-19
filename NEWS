@@ -1,4 +1,13 @@
 ==============
+Version 3.28.1
+==============
+
+ • Fixes for invalid type propagation
+ • Fixes for gobject introspection
+ • Improved busy tracking in streams
+ • Ensure JsonrpcClient::failed is emitted in panic
+
+==============
 Version 3.28.0
 ==============
 
