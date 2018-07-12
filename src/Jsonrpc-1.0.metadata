@@ -1,1 +1,21 @@
-message* parent="Jsonrpc.Message" skip=false
+message_new parent="Jsonrpc.Message" name="new" skip=false
+message_new_array parent="Jsonrpc.Message" name="new_array" skip=false
+message_parse parent="Jsonrpc.Message" name="parse" skip=false
+message_parse_array parent="Jsonrpc.Message" name="parse_array" skip=false
+MessagePutString parent="Jsonrpc.Message" name="PutString"
+MessagePutStrv parent="Jsonrpc.Message" name="PutStrv"
+  .val array=true
+MessagePutInt64 parent="Jsonrpc.Message" name="PutInt64"
+MessagePutInt32 parent="Jsonrpc.Message" name="PutInt32"
+MessagePutDouble parent="Jsonrpc.Message" name="PutDouble"
+MessagePutBoolean parent="Jsonrpc.Message" name="PutBoolean"
+MessageGetVariant parent="Jsonrpc.Message" name="GetVariant"
+MessageGetStrv parent="Jsonrpc.Message" name="GetStrv"
+  .valptr array=true
+MessageGetString parent="Jsonrpc.Message" name="GetString"
+MessageGetIter parent="Jsonrpc.Message" name="GetIter"
+MessageGetInt64 parent="Jsonrpc.Message" name="GetInt64"
+MessageGetInt32 parent="Jsonrpc.Message" name="GetInt32"
+MessageGetDouble parent="Jsonrpc.Message" name="GetDouble"
+MessageGetDict parent="Jsonrpc.Message" name="GetDict"
+MessageGetBoolean parent="Jsonrpc.Message" name="GetBoolean"

@@ -85,7 +85,7 @@ if get_option('with_introspection')
   if get_option('with_vapi')
 
     libjsonrpc_glib_vapi = gnome.generate_vapi('jsonrpc-glib-' + apiversion,
-          sources: libjsonrpc_glib_gir[0],
+          sources: [libjsonrpc_glib_gir[0], 'Jsonrpc-' + apiversion + '-custom.vala'],
          packages: [ 'gio-2.0', 'json-glib-1.0' ],
           install: true,
       install_dir: vapidir,
