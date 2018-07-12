@@ -52,14 +52,17 @@ call_cb (GObject      *object,
   gboolean r;
 
   r = jsonrpc_client_call_finish (JSONRPC_CLIENT (object), result, &res, &error);
-  g_assert_cmpint (error->domain, ==, G_IO_ERROR);
+
+  if (r == FALSE)
+    {
+      g_assert_cmpint (error->domain, ==, G_IO_ERROR);
 #if 0
-  /* We can't really guarantee this, given the ways the socket errors
-   * can be propagated.
-   */
-  g_assert (error->code == 0 || error->code == G_IO_ERROR_NOT_CONNECTED);
+      /* We can't really guarantee this, given the ways the socket errors
+       * can be propagated.
+       */
+      g_assert (error->code == 0 || error->code == G_IO_ERROR_NOT_CONNECTED);
 #endif
-  g_assert_false (r);
+    }
 
   g_main_loop_quit (main_loop);
 }
