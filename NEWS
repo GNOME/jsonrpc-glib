@@ -1,4 +1,14 @@
 ==============
+Version 3.29.4
+==============
+
+Changes in this release:
+
+ • More lenient testing for transient errors
+ • Increased compiler warnings when building on GCC
+ • Vala vapi generation improvements
+
+==============
 Version 3.29.3
 ==============
 
