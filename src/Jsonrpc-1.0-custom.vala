@@ -26,7 +26,7 @@ namespace Jsonrpc {
 		}
 		public struct GetString {
 			[CCode (cheader_filename = "jsonrpc-glib.h", cname = "JSONRPC_MESSAGE_GET_STRING")]
-			public static void* create (ref string val);
+			public static void* create (ref unowned string val);
 		}
 		public struct GetStrv {
 			[CCode (cheader_filename = "jsonrpc-glib.h", cname = "JSONRPC_MESSAGE_GET_STRV")]
