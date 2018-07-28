@@ -146,6 +146,10 @@ jsonrpc_input_stream_read_body_cb (GObject      *object,
   g_assert (state->buffer == NULL);
   g_assert (message != NULL || error != NULL);
 
+  /* Don't let message be floating */
+  if (message != NULL)
+    g_variant_take_ref (message);
+
   if (error != NULL)
     g_task_return_error (task, g_steal_pointer (&error));
   else
