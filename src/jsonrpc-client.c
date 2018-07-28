@@ -963,6 +963,7 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
 {
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GVariant) message = NULL;
+  g_autoptr(GVariant) sunk_variant = NULL;
   g_autoptr(GTask) task = NULL;
   g_autoptr(GError) error = NULL;
   GVariantDict dict;
@@ -974,6 +975,13 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
 
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_source_tag (task, jsonrpc_client_call_async);
+
+  if (params == NULL)
+    params = g_variant_new_maybe (G_VARIANT_TYPE_VARIANT, NULL);
+
+  /* If we got a floating reference, we should consume it */
+  if (g_variant_is_floating (params))
+    sunk_variant = g_variant_ref_sink (params);
 
   if (!jsonrpc_client_check_ready (self, &error))
     {
@@ -990,11 +998,6 @@ jsonrpc_client_call_async (JsonrpcClient       *self,
   id = ++priv->sequence;
 
   g_task_set_task_data (task, GINT_TO_POINTER (id), NULL);
-
-  /* Use empty maybe type for NULL, and floating reference will
-   * be consumed by g_variant_dict_insert_value() below. */
-  if (params == NULL)
-    params = g_variant_new_maybe (G_VARIANT_TYPE_VARIANT, NULL);
 
   g_variant_dict_init (&dict, NULL);
   g_variant_dict_insert (&dict, "jsonrpc", "s", "2.0");
