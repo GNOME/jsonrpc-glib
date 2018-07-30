@@ -122,14 +122,12 @@ jsonrpc_input_stream_read_body_cb (GObject      *object,
 
   if (state->use_gvariant)
     {
-      message = g_variant_new_from_data (state->gvariant_type ?  state->gvariant_type
-                                                              : G_VARIANT_TYPE_VARDICT,
-                                         state->buffer,
-                                         state->content_length,
-                                         FALSE,
-                                         g_free,
-                                         state->buffer);
-      state->buffer = NULL;
+      g_autoptr(GBytes) bytes = NULL;
+
+      bytes = g_bytes_new_take (g_steal_pointer (&state->buffer), state->content_length);
+      message = g_variant_new_from_bytes (state->gvariant_type ?  state->gvariant_type
+                                                               : G_VARIANT_TYPE_VARDICT,
+                                          bytes, FALSE);
 
       if G_UNLIKELY (jsonrpc_input_stream_debug && state->use_gvariant)
         {
