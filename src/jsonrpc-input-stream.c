@@ -321,7 +321,13 @@ jsonrpc_input_stream_read_message_finish (JsonrpcInputStream  *self,
   ret = local_message != NULL;
 
   if (message != NULL)
-    *message = g_steal_pointer (&local_message);
+    {
+      /* Unbox the variant if it is in a wrapper */
+      if (local_message && g_variant_is_of_type (local_message, G_VARIANT_TYPE_VARIANT))
+        *message = g_variant_get_variant (local_message);
+      else
+        *message = g_steal_pointer (&local_message);
+    }
 
   return ret;
 }
