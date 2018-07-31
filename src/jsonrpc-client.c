@@ -671,7 +671,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
   JsonrpcClientPrivate *priv = jsonrpc_client_get_instance_private (self);
   g_autoptr(GVariant) message = NULL;
   g_autoptr(GError) error = NULL;
-  g_auto(GVariantDict) dict = {{{ 0 }}};
+  g_autoptr(GVariantDict) dict = NULL;
 
   g_assert (JSONRPC_IS_INPUT_STREAM (stream));
   g_assert (JSONRPC_IS_CLIENT (self));
@@ -708,14 +708,14 @@ jsonrpc_client_call_read_cb (GObject      *object,
       return;
     }
 
-  g_variant_dict_init (&dict, message);
+  dict = g_variant_dict_new (message);
 
   /*
    * If the message is malformed, we'll also need to perform another read.
    * We do this to try to be relaxed against failures. That seems to be
    * the JSONRPC way, although I'm not sure I like the idea.
    */
-  if (!is_jsonrpc_reply (&dict))
+  if (dict == NULL || !is_jsonrpc_reply (dict))
     {
       error = g_error_new_literal (G_IO_ERROR,
                                    G_IO_ERROR_INVALID_DATA,
@@ -728,29 +728,29 @@ jsonrpc_client_call_read_cb (GObject      *object,
    * If the response does not have an "id" field, then it is a "notification"
    * and we need to emit the "notificiation" signal.
    */
-  if (is_jsonrpc_notification (&dict))
+  if (is_jsonrpc_notification (dict))
     {
       g_autoptr(GVariant) params = NULL;
       const gchar *method_name = NULL;
 
-      if (g_variant_dict_lookup (&dict, "method", "&s", &method_name))
+      if (g_variant_dict_lookup (dict, "method", "&s", &method_name))
         {
           GQuark detail = g_quark_try_string (method_name);
 
-          params = g_variant_dict_lookup_value (&dict, "params", NULL);
+          params = g_variant_dict_lookup_value (dict, "params", NULL);
           g_signal_emit (self, signals [NOTIFICATION], detail, method_name, params);
         }
 
       goto begin_next_read;
     }
 
-  if (is_jsonrpc_result (&dict))
+  if (is_jsonrpc_result (dict))
     {
       g_autoptr(GVariant) params = NULL;
       gint64 id = -1;
       GTask *task;
 
-      if (!g_variant_dict_lookup (&dict, "id", "x", &id) ||
+      if (!g_variant_dict_lookup (dict, "id", "x", &id) ||
           NULL == (task = g_hash_table_lookup (priv->invocations, GINT_TO_POINTER (id))))
         {
           error = g_error_new_literal (G_IO_ERROR,
@@ -760,7 +760,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
           return;
         }
 
-      if (NULL != (params = g_variant_dict_lookup_value (&dict, "result", NULL)))
+      if (NULL != (params = g_variant_dict_lookup_value (dict, "result", NULL)))
         g_task_return_pointer (task, g_steal_pointer (&params), (GDestroyNotify)g_variant_unref);
       else
         g_task_return_pointer (task, NULL, NULL);
@@ -771,7 +771,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
   /*
    * If this is a method call, emit the handle-call signal.
    */
-  if (is_jsonrpc_call (&dict))
+  if (is_jsonrpc_call (dict))
     {
       g_autoptr(GVariant) id = NULL;
       g_autoptr(GVariant) params = NULL;
@@ -779,8 +779,8 @@ jsonrpc_client_call_read_cb (GObject      *object,
       gboolean ret = FALSE;
       GQuark detail;
 
-      if (!g_variant_dict_lookup (&dict, "method", "&s", &method_name) ||
-          NULL == (id = g_variant_dict_lookup_value (&dict, "id", NULL)))
+      if (!g_variant_dict_lookup (dict, "method", "&s", &method_name) ||
+          NULL == (id = g_variant_dict_lookup_value (dict, "id", NULL)))
         {
           error = g_error_new_literal (G_IO_ERROR,
                                        G_IO_ERROR_INVALID_DATA,
@@ -789,7 +789,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
           return;
         }
 
-      params = g_variant_dict_lookup_value (&dict, "params", NULL);
+      params = g_variant_dict_lookup_value (dict, "params", NULL);
 
       g_assert (method_name != NULL);
       g_assert (id != NULL);
@@ -810,18 +810,18 @@ jsonrpc_client_call_read_cb (GObject      *object,
    * we need to dispatch it now.
    */
 
-  if (g_variant_dict_contains (&dict, "id") &&
-      g_variant_dict_contains (&dict, "error"))
+  if (g_variant_dict_contains (dict, "id") &&
+      g_variant_dict_contains (dict, "error"))
     {
       g_autoptr(GVariant) error_variant = NULL;
       g_autofree gchar *errstr = NULL;
       gint64 id = -1;
 
-      error_variant = g_variant_dict_lookup_value (&dict, "error", NULL);
+      error_variant = g_variant_dict_lookup_value (dict, "error", NULL);
       errstr = g_variant_print (error_variant, FALSE);
       error = g_error_new_literal (G_IO_ERROR, G_IO_ERROR_FAILED, errstr);
 
-      if (g_variant_dict_lookup (&dict, "id", "x", &id))
+      if (g_variant_dict_lookup (dict, "id", "x", &id))
         {
           GTask *task = g_hash_table_lookup (priv->invocations, GINT_TO_POINTER (id));
 
