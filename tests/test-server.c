@@ -26,6 +26,7 @@
 #include <gio/gunixinputstream.h>
 #include <glib-unix.h>
 #include <jsonrpc-glib.h>
+#include <signal.h>
 #include <unistd.h>
 
 static void
@@ -126,6 +127,8 @@ test_basic (gboolean use_gvariant)
   gint pair_b[2];
   gint count = 0;
   gint r;
+
+  signal (SIGPIPE, SIG_IGN);
 
   r = g_unix_open_pipe (pair_a, FD_CLOEXEC, &error);
   g_assert_no_error (error);

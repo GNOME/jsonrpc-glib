@@ -20,6 +20,7 @@
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
 #include <jsonrpc-glib.h>
+#include <signal.h>
 
 static GMainLoop *main_loop;
 static gint n_ops;
@@ -188,6 +189,8 @@ main (gint   argc,
   g_autoptr(GIOStream) server_stream = NULL;
   gint pair1[2];
   gint pair2[2];
+
+  signal (SIGPIPE, SIG_IGN);
 
   main_loop = g_main_loop_new (NULL, FALSE);
 
