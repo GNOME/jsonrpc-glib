@@ -1,3 +1,16 @@
+===============
+Version 3.29.91
+===============
+
+Changes in this release:
+
+ • Fix of double-free in generated vala bindings
+ • Floating reference fixes for some gvariants
+ • Use g_bytes_new_take() to simplify memory tracking
+ • Some variants are now unwrapped to simplify usage by consumers.
+ • Unit tests now disable SIGPIPE
+ • test-client was removed as it was dead code
+
 ==============
 Version 3.29.4
 ==============
