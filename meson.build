@@ -1,5 +1,5 @@
 project('jsonrpc-glib', 'c',
-          version: '3.30.1',
+          version: '3.31.0',
           license: 'LGPLv2.1+',
     meson_version: '>= 0.40.1',
   default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
