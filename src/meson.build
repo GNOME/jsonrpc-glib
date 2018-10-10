@@ -52,7 +52,7 @@ libjsonrpc_glib = library(
   'jsonrpc-glib-' + apiversion,
   libjsonrpc_glib_sources,
 
-        c_args: hidden_visibility_args,
+        c_args: hidden_visibility_args + release_args,
   dependencies: libjsonrpc_glib_deps,
      soversion: soversion,
        version: libversion,
