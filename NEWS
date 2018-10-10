@@ -1,4 +1,13 @@
 ==============
+Version 3.30.1
+==============
+
+Changes in this release:
+
+ • When --buildtype=release is used, assertion checks are disabled
+   and -Bsymbolic is used.
+
+==============
 Version 3.30.0
 ==============
 
