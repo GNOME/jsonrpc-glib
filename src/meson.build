@@ -52,11 +52,12 @@ libjsonrpc_glib = library(
   'jsonrpc-glib-' + apiversion,
   libjsonrpc_glib_sources,
 
-        c_args: hidden_visibility_args + release_args,
-  dependencies: libjsonrpc_glib_deps,
-     soversion: soversion,
-       version: libversion,
-       install: true,
+         c_args: hidden_visibility_args + release_args,
+   dependencies: libjsonrpc_glib_deps,
+      soversion: soversion,
+        version: libversion,
+darwin_versions: darwin_versions,
+        install: true,
 )
 
 libjsonrpc_glib_dep = declare_dependency(
