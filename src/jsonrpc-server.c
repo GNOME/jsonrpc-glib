@@ -23,6 +23,7 @@
 #include <stdlib.h>
 
 #include "jsonrpc-input-stream.h"
+#include "jsonrpc-marshalers.h"
 #include "jsonrpc-output-stream.h"
 #include "jsonrpc-server.h"
 
@@ -152,13 +153,17 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcServerClass, handle_call),
-                  g_signal_accumulator_true_handled, NULL, NULL,
+                  g_signal_accumulator_true_handled, NULL,
+                  _jsonrpc_marshal_BOOLEAN__OBJECT_STRING_VARIANT_VARIANT,
                   G_TYPE_BOOLEAN,
                   4,
                   JSONRPC_TYPE_CLIENT,
                   G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                   G_TYPE_VARIANT,
                   G_TYPE_VARIANT);
+  g_signal_set_va_marshaller (signals [HANDLE_CALL],
+                              G_TYPE_FROM_CLASS (klass),
+                              _jsonrpc_marshal_BOOLEAN__OBJECT_STRING_VARIANT_VARIANTv);
 
   /**
    * JsonrpcServer::notification:
@@ -176,12 +181,16 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcServerClass, notification),
-                  NULL, NULL, NULL,
+                  NULL, NULL,
+                  _jsonrpc_marshal_VOID__OBJECT_STRING_VARIANT,
                   G_TYPE_NONE,
                   3,
                   JSONRPC_TYPE_CLIENT,
                   G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                   G_TYPE_VARIANT);
+  g_signal_set_va_marshaller (signals [NOTIFICATION],
+                              G_TYPE_FROM_CLASS (klass),
+                              _jsonrpc_marshal_VOID__OBJECT_STRING_VARIANTv);
 
   /**
    * JsonrpcServer::client-accepted:
@@ -198,13 +207,10 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcServerClass, client_accepted),
                   NULL, NULL,
-                  g_cclosure_marshal_VOID__OBJECT,
+                  NULL,
                   G_TYPE_NONE,
                   1,
                   JSONRPC_TYPE_CLIENT);
-  g_signal_set_va_marshaller (signals [CLIENT_ACCEPTED],
-                              G_TYPE_FROM_CLASS (klass),
-                              g_cclosure_marshal_VOID__OBJECTv);
 
   /**
    * JsonrpcServer::client-closed:
@@ -221,13 +227,10 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcServerClass, client_closed),
                   NULL, NULL,
-                  g_cclosure_marshal_VOID__OBJECT,
+                  NULL,
                   G_TYPE_NONE,
                   1,
                   JSONRPC_TYPE_CLIENT);
-  g_signal_set_va_marshaller (signals [CLIENT_CLOSED],
-                              G_TYPE_FROM_CLASS (klass),
-                              g_cclosure_marshal_VOID__OBJECTv);
 }
 
 static void

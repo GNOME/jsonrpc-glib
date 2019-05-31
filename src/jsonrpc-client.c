@@ -58,6 +58,7 @@
 #include "jsonrpc-client.h"
 #include "jsonrpc-input-stream.h"
 #include "jsonrpc-input-stream-private.h"
+#include "jsonrpc-marshalers.h"
 #include "jsonrpc-output-stream.h"
 
 typedef struct
@@ -504,11 +505,8 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (JsonrpcClientClass, failed),
                   NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
+                  NULL,
                   G_TYPE_NONE, 0);
-  g_signal_set_va_marshaller (signals [FAILED],
-                              G_TYPE_FROM_CLASS (klass),
-                              g_cclosure_marshal_VOID__VOIDv);
 
   /**
    * JsonrpcClient::handle-call:
@@ -537,12 +535,16 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   G_STRUCT_OFFSET (JsonrpcClientClass, handle_call),
-                  g_signal_accumulator_true_handled, NULL, NULL,
+                  g_signal_accumulator_true_handled, NULL,
+                  _jsonrpc_marshal_BOOLEAN__STRING_VARIANT_VARIANT,
                   G_TYPE_BOOLEAN,
                   3,
                   G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                   G_TYPE_VARIANT,
                   G_TYPE_VARIANT);
+  g_signal_set_va_marshaller (signals [HANDLE_CALL],
+                              G_TYPE_FROM_CLASS (klass),
+                              _jsonrpc_marshal_BOOLEAN__STRING_VARIANT_VARIANTv);
 
   /**
    * JsonrpcClient::notification:
@@ -562,11 +564,15 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                   G_STRUCT_OFFSET (JsonrpcClientClass, notification),
-                  NULL, NULL, NULL,
+                  NULL, NULL,
+                  _jsonrpc_marshal_VOID__STRING_VARIANT,
                   G_TYPE_NONE,
                   2,
                   G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
                   G_TYPE_VARIANT);
+  g_signal_set_va_marshaller (signals [NOTIFICATION],
+                              G_TYPE_FROM_CLASS (klass),
+                              _jsonrpc_marshal_VOID__STRING_VARIANTv);
 }
 
 static void

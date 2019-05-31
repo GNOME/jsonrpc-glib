@@ -14,6 +14,13 @@ jsonrpc_version_h = configure_file(
         install: true,
   configuration: version_data)
 
+marshalers = gnome.genmarshal('jsonrpc-marshalers',
+             sources: 'jsonrpc-marshalers.list',
+              prefix: '_jsonrpc_marshal',
+  valist_marshallers: true,
+            internal: true,
+)
+
 libjsonrpc_glib_generated_headers = [
   jsonrpc_version_h,
 ]
@@ -46,6 +53,7 @@ libjsonrpc_glib_sources = [
   libjsonrpc_glib_generated_headers,
   libjsonrpc_glib_public_headers,
   libjsonrpc_glib_public_sources,
+  marshalers,
 ]
 
 libjsonrpc_glib = library(
