@@ -1,4 +1,14 @@
 ==============
+Version 3.33.3
+==============
+
+Changes in this release:
+
+ • Custom marshallers are now provided for all signals to improve the
+   stack-unwinding capability from kernel tooling such as Linux `perf`.
+ • Various build system improvements.
+
+==============
 Version 3.32.0
 ==============
 
