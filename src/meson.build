@@ -11,7 +11,6 @@ jsonrpc_version_h = configure_file(
           input: 'jsonrpc-version.h.in',
          output: 'jsonrpc-version.h',
     install_dir: libjsonrpc_glib_header_dir,
-        install: true,
   configuration: version_data)
 
 marshalers = gnome.genmarshal('jsonrpc-marshalers',
