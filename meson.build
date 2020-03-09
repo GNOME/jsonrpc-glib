@@ -32,9 +32,10 @@ config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'libjsonrpc_glib')
 config_h.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
+internal_inc = include_directories('.')
+
 add_project_arguments([
   '-DHAVE_CONFIG_H',
-  '-I' + meson.build_root(),
   '-DJSONRPC_GLIB_COMPILATION',
 ], language: 'c')
 

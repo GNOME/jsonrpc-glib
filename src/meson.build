@@ -58,6 +58,7 @@ libjsonrpc_glib_sources = [
 libjsonrpc_glib = library(
   'jsonrpc-glib-' + apiversion,
   libjsonrpc_glib_sources,
+  include_directories: internal_inc,
 
          c_args: hidden_visibility_args + release_args,
    dependencies: libjsonrpc_glib_deps,
