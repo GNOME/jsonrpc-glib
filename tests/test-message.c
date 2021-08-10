@@ -115,6 +115,7 @@ static void
 test_extract_node (void)
 {
   g_autoptr(GVariant) node = NULL;
+  g_autoptr(GVariant) node2 = NULL;
   g_autoptr(GVariant) ar = NULL;
   gboolean r;
 
@@ -124,6 +125,13 @@ test_extract_node (void)
   r = JSONRPC_MESSAGE_PARSE (node, "foo", "{", "bar", JSONRPC_MESSAGE_GET_VARIANT (&ar), "}");
   g_assert (ar != NULL);
   g_assert_cmpint (r, ==, TRUE);
+
+  node = jsonrpc_message_new ("foo", "{", "bar", "[", JSONRPC_MESSAGE_PUT_INT32 (1), "]", "}", NULL);
+  g_assert (node != NULL);
+
+  node2 = JSONRPC_MESSAGE_NEW ("bar", JSONRPC_MESSAGE_PUT_INT32 (1));
+  node = JSONRPC_MESSAGE_NEW ("foo", "{", JSONRPC_MESSAGE_PUT_VARIANT (g_steal_pointer (&node2)), "}");
+  g_assert (node != NULL);
 }
 
 static void
