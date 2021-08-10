@@ -45,6 +45,7 @@
 #define IS_PUT_INT64(_any)   COMPARE_MAGIC(_any, PUT_INT64)
 #define IS_PUT_BOOLEAN(_any) COMPARE_MAGIC(_any, PUT_BOOLEAN)
 #define IS_PUT_DOUBLE(_any)  COMPARE_MAGIC(_any, PUT_DOUBLE)
+#define IS_PUT_VARIANT(_any) COMPARE_MAGIC(_any, PUT_VARIANT)
 
 #define IS_GET_STRING(_any)  COMPARE_MAGIC(_any, GET_STRING)
 #define IS_GET_STRV(_any)    COMPARE_MAGIC(_any, GET_STRV)
@@ -89,6 +90,12 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
   if (!keyptr || keyptr->magic.bytes[0] == '}')
     EXIT;
 
+  if (IS_PUT_VARIANT (keyptr))
+    {
+      g_variant_builder_add (builder, "v", ((JsonrpcMessagePutVariant *)keyptr)->val);
+      EXIT;
+    }
+
   g_variant_builder_open (builder, G_VARIANT_TYPE ("{sv}"));
 
   /*
@@ -112,8 +119,14 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
   switch (valptr->magic.bytes[0])
     {
     case '{':
-      g_variant_builder_open (builder, G_VARIANT_TYPE ("a{sv}"));
       param = va_arg (*args, gconstpointer);
+      /*
+       * Peek ahead if a possible GVariant will be injected
+       */
+      if (IS_PUT_VARIANT ((JsonrpcMessageAny *)param))
+        g_variant_builder_open (builder, G_VARIANT_TYPE ("v"));
+      else
+        g_variant_builder_open (builder, G_VARIANT_TYPE ("a{sv}"));
       jsonrpc_message_build_object (builder, param, args);
       g_variant_builder_close (builder);
       break;

@@ -122,6 +122,12 @@ typedef struct
 typedef struct
 {
   JsonrpcMessageMagic magic;
+  GVariant *val;
+} JsonrpcMessagePutVariant __attribute__((aligned (8)));
+
+typedef struct
+{
+  JsonrpcMessageMagic magic;
   GVariant **variantptr;
 } JsonrpcMessageGetVariant __attribute__((aligned (8)));
 
@@ -142,6 +148,7 @@ typedef struct
 #define _JSONRPC_MESSAGE_GET_DOUBLE_MAGIC  _JSONRPC_MAGIC("GETD")
 #define _JSONRPC_MESSAGE_GET_ITER_MAGIC    _JSONRPC_MAGIC("GETT")
 #define _JSONRPC_MESSAGE_GET_DICT_MAGIC    _JSONRPC_MAGIC("GETC")
+#define _JSONRPC_MESSAGE_PUT_VARIANT_MAGIC _JSONRPC_MAGIC("PUTV")
 #define _JSONRPC_MESSAGE_GET_VARIANT_MAGIC _JSONRPC_MAGIC("GETV")
 
 #define _JSONRPC_MESSAGE_PUT_STRING_MAGIC_C  _JSONRPC_MAGIC_C('P','U','T','S')
@@ -158,6 +165,7 @@ typedef struct
 #define _JSONRPC_MESSAGE_GET_DOUBLE_MAGIC_C  _JSONRPC_MAGIC_C('G','E','T','D')
 #define _JSONRPC_MESSAGE_GET_ITER_MAGIC_C    _JSONRPC_MAGIC_C('G','E','T','T')
 #define _JSONRPC_MESSAGE_GET_DICT_MAGIC_C    _JSONRPC_MAGIC_C('G','E','T','C')
+#define _JSONRPC_MESSAGE_PUT_VARIANT_MAGIC_C _JSONRPC_MAGIC_C('P','U','T','V')
 #define _JSONRPC_MESSAGE_GET_VARIANT_MAGIC_C _JSONRPC_MAGIC_C('G','E','T','V')
 
 #define JSONRPC_MESSAGE_NEW(first_, ...) \
@@ -205,6 +213,8 @@ typedef struct
 #define JSONRPC_MESSAGE_GET_DICT(_valptr) \
   (&((JsonrpcMessageGetDict) { .magic = {_JSONRPC_MESSAGE_GET_DICT_MAGIC_C}, .dictptr = _valptr }))
 
+#define JSONRPC_MESSAGE_PUT_VARIANT(_val) \
+  (&((JsonrpcMessagePutVariant) { .magic = {_JSONRPC_MESSAGE_PUT_VARIANT_MAGIC_C}, .val = _val }))
 #define JSONRPC_MESSAGE_GET_VARIANT(_valptr) \
   (&((JsonrpcMessageGetVariant) { .magic = {_JSONRPC_MESSAGE_GET_VARIANT_MAGIC_C}, .variantptr = _valptr }))
 
