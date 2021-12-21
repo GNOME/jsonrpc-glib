@@ -90,13 +90,7 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
   if (!keyptr || keyptr->magic.bytes[0] == '}')
     EXIT;
 
-  if (IS_PUT_VARIANT (keyptr))
-    {
-      g_variant_builder_add (builder, "v", ((JsonrpcMessagePutVariant *)keyptr)->val);
-      EXIT;
-    }
-
-  g_variant_builder_open (builder, G_VARIANT_TYPE ("{sv}"));
+  g_assert (!IS_PUT_VARIANT (keyptr));
 
   /*
    * Either this is a string wrapped in JSONRPC_MESSAGE_PUT_STRING() or
@@ -107,13 +101,13 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
   else
     key = (const char *)keyptr;
 
-  g_variant_builder_add (builder, "s", key);
-
   /*
    * Now try to read the value for the key/val pair.
    */
   valptr = va_arg (*args, gpointer);
 
+  g_variant_builder_open (builder, G_VARIANT_TYPE ("{sv}"));
+  g_variant_builder_add (builder, "s", key);
   g_variant_builder_open (builder, G_VARIANT_TYPE ("v"));
 
   switch (valptr->magic.bytes[0])
@@ -123,12 +117,32 @@ jsonrpc_message_build_object (GVariantBuilder *builder,
       /*
        * Peek ahead if a possible GVariant will be injected
        */
-      if (IS_PUT_VARIANT ((JsonrpcMessageAny *)param))
-        g_variant_builder_open (builder, G_VARIANT_TYPE ("v"));
+      if (IS_PUT_VARIANT ((JsonrpcMessageAny *)param) &&
+          ((JsonrpcMessagePutVariant *)param)->val != NULL)
+        {
+          if (g_variant_is_of_type (((JsonrpcMessagePutVariant *)param)->val, G_VARIANT_TYPE_VARDICT))
+            {
+              g_variant_builder_add (builder, "v", ((JsonrpcMessagePutVariant *)param)->val);
+            }
+          else
+            {
+              g_warning ("Attempt to add variant of type %s but expected a{sv}",
+                         g_variant_get_type_string (((JsonrpcMessagePutVariant *)param)->val));
+              g_variant_builder_open (builder, G_VARIANT_TYPE ("mav"));
+            }
+        }
+      else if (IS_PUT_VARIANT ((JsonrpcMessageAny *)param))
+        {
+          g_variant_builder_open (builder, G_VARIANT_TYPE ("mav"));
+          g_variant_builder_close (builder);
+        }
       else
-        g_variant_builder_open (builder, G_VARIANT_TYPE ("a{sv}"));
-      jsonrpc_message_build_object (builder, param, args);
-      g_variant_builder_close (builder);
+        {
+          g_variant_builder_open (builder, G_VARIANT_TYPE ("a{sv}"));
+          jsonrpc_message_build_object (builder, param, args);
+          g_variant_builder_close (builder);
+        }
+
       break;
 
     case '[':
@@ -379,7 +393,24 @@ jsonrpc_message_parse_object (GVariantDict *dict,
         }
     }
   else if (IS_GET_VARIANT (valptr))
-    ret = !!(*((JsonrpcMessageGetVariant *)valptr)->variantptr = g_variant_dict_lookup_value (dict, key, NULL));
+    {
+      GVariant *lookup = g_variant_dict_lookup_value (dict, key, NULL);
+      GVariant *child = NULL;
+
+      if (lookup != NULL &&
+          g_variant_is_of_type (lookup, G_VARIANT_TYPE_VARIANT) &&
+          g_variant_n_children (lookup) == 1 &&
+          (child = g_variant_get_child_value (lookup, 0)) &&
+          g_variant_is_of_type (child, G_VARIANT_TYPE ("a{sv}")))
+        *((JsonrpcMessageGetVariant *)valptr)->variantptr = g_steal_pointer (&child);
+      else
+        *((JsonrpcMessageGetVariant *)valptr)->variantptr = g_steal_pointer (&lookup);
+
+      ret = !!(*((JsonrpcMessageGetVariant *)valptr)->variantptr);
+
+      g_clear_pointer (&lookup, g_variant_unref);
+      g_clear_pointer (&child, g_variant_unref);
+    }
   else if (IS_GET_STRING (valptr))
     {
       g_autoptr(GVariant) v = g_variant_dict_lookup_value (dict, key, NULL);

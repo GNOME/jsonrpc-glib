@@ -299,6 +299,55 @@ test_null_strv (void)
   g_assert_null (get_ar_from_v);
 }
 
+static void
+test_putv_null (void)
+{
+  g_autoptr(GVariant) src = NULL;
+  g_autoptr(GVariant) dst = NULL;
+  GVariantDict dict;
+
+  src = JSONRPC_MESSAGE_NEW ("key", "{", JSONRPC_MESSAGE_PUT_VARIANT (NULL), "}");
+  g_assert_nonnull (src);
+
+  g_variant_dict_init (&dict, NULL);
+  g_variant_dict_insert (&dict, "key", "mav", NULL);
+  dst = g_variant_dict_end (&dict);
+
+  g_assert_nonnull (dst);
+  g_assert_true (g_variant_equal (dst, src));
+}
+
+static void
+test_putv_nonnull (void)
+{
+  g_autoptr(GVariant) src = NULL;
+  g_autoptr(GVariant) dst = NULL;
+  g_autoptr(GVariant) child = NULL;
+  g_autoptr(GVariant) child2 = NULL;
+  GVariantDict cdict;
+  GVariantDict dict;
+
+  g_variant_dict_init (&cdict, NULL);
+  g_variant_dict_insert (&cdict, "hello", "s", "world");
+  child = g_variant_take_ref (g_variant_dict_end (&cdict));
+
+  src = JSONRPC_MESSAGE_NEW ("key", "{", JSONRPC_MESSAGE_PUT_VARIANT (child), "}");
+  g_assert_nonnull (src);
+
+  g_variant_dict_init (&dict, NULL);
+  g_variant_dict_insert (&dict, "key", "v", child);
+  dst = g_variant_take_ref (g_variant_dict_end (&dict));
+  g_assert_nonnull (dst);
+
+  g_assert_false (g_variant_is_floating (src));
+  g_assert_false (g_variant_is_floating (dst));
+  g_assert_false (g_variant_is_floating (child));
+  g_assert_true (g_variant_equal (dst, src));
+
+  JSONRPC_MESSAGE_PARSE (src, "key", JSONRPC_MESSAGE_GET_VARIANT (&child2));
+  g_assert_true (g_variant_equal (child, child2));
+}
+
 gint
 main (gint argc,
       gchar *argv[])
@@ -316,5 +365,7 @@ main (gint argc,
   g_test_add_func ("/Jsonrpc/Message/null_string", test_null_string);
   g_test_add_func ("/Jsonrpc/Message/strv", test_strv);
   g_test_add_func ("/Jsonrpc/Message/null_strv", test_null_strv);
+  g_test_add_func ("/Jsonrpc/Message/putv_null", test_putv_null);
+  g_test_add_func ("/Jsonrpc/Message/putv_nonnull", test_putv_nonnull);
   return g_test_run ();
 }
