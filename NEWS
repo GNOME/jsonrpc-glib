@@ -1,4 +1,12 @@
 ==============
+Version 3.41.0
+==============
+
+This is a development release.
+
+ • Improvements to JSONRPC_MESSAGE_PUT_VARIANT()
+
+==============
 Version 3.40.0
 ==============
 
