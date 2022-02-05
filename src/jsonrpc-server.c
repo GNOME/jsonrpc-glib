@@ -28,13 +28,13 @@
 #include "jsonrpc-server.h"
 
 /**
- * SECTION:jsonrpc-server
- * @title: JsonrpcServer
- * @short_description: A server for JSON-RPC communication
+ * JsonrpcServer:
+ * 
+ * A server for JSON-RPC communication
  *
  * The #JsonrpcServer class can help you implement a JSON-RPC server. You can
  * accept connections and then communicate with clients using the
- * #JsonrpcClient API.
+ * [class@Client] API.
  */
 
 typedef struct
@@ -142,7 +142,7 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
    * This method is emitted when the client requests a method call.
    *
    * If you return %TRUE from this function, you should reply to it (even upon
-   * failure), using jsonrpc_client_reply() or jsonrpc_client_reply_async().
+   * failure), using [method@Client.reply] or [method@Client.reply_async].
    *
    * Returns: %TRUE if the request was handled.
    *
@@ -391,7 +391,7 @@ sort_by_method (gconstpointer a,
  * Adds a new handler that will be dispatched when a matching @method arrives.
  *
  * Returns: A handler id that can be used to remove the handler with
- *   jsonrpc_server_remove_handler().
+ *   [method@Server.remove_handler].
  *
  * Since: 3.26
  */
@@ -423,9 +423,9 @@ jsonrpc_server_add_handler (JsonrpcServer        *self,
 /**
  * jsonrpc_server_remove_handler:
  * @self: a #JsonrpcServer
- * @handler_id: a handler returned from jsonrpc_server_add_handler()
+ * @handler_id: a handler returned from [method@Server.add_handler]
  *
- * Removes a handler that was previously registered with jsonrpc_server_add_handler().
+ * Removes a handler that was previously registered with [method@Server.add_handler].
  *
  * Since: 3.26
  */
