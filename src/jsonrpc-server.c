@@ -133,11 +133,11 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
 
   /**
    * JsonrpcServer::handle-call:
-   * @self: a #JsonrpcServer
-   * @client: a #JsonrpcClient
-   * @method: the method that was called
-   * @id: the identifier of the method call
-   * @params: the parameters of the method call
+   * @self: A #JsonrpcServer
+   * @client: A #JsonrpcClient
+   * @method: The method that was called
+   * @id: The identifier of the method call
+   * @params: The parameters of the method call
    *
    * This method is emitted when the client requests a method call.
    *
@@ -169,8 +169,8 @@ jsonrpc_server_class_init (JsonrpcServerClass *klass)
    * JsonrpcServer::notification:
    * @self: A #JsonrpcServer
    * @client: A #JsonrpcClient
-   * @method: the notification name
-   * @id: the params for the notification
+   * @method: The notification name
+   * @id: The params for the notification
    *
    * This signal is emitted when the client has sent a notification to us.
    *
@@ -323,7 +323,7 @@ jsonrpc_server_client_notification (JsonrpcServer *self,
 
 /**
  * jsonrpc_server_accept_io_stream:
- * @self: a #JsonrpcServer
+ * @self: A #JsonrpcServer
  * @io_stream: A #GIOStream
  *
  * This function accepts @io_stream as a new client to the #JsonrpcServer
@@ -385,8 +385,8 @@ sort_by_method (gconstpointer a,
  * @method: A method to handle
  * @handler: (closure handler_data) (destroy handler_data_destroy): A handler to
  *   execute when an incoming method matches @methods
- * @handler_data: user data for @handler
- * @handler_data_destroy: a destroy callback for @handler_data
+ * @handler_data: User data for @handler
+ * @handler_data_destroy: A destroy callback for @handler_data
  *
  * Adds a new handler that will be dispatched when a matching @method arrives.
  *
@@ -422,8 +422,8 @@ jsonrpc_server_add_handler (JsonrpcServer        *self,
 
 /**
  * jsonrpc_server_remove_handler:
- * @self: a #JsonrpcServer
- * @handler_id: a handler returned from [method@Server.add_handler]
+ * @self: A #JsonrpcServer
+ * @handler_id: A handler returned from [method@Server.add_handler]
  *
  * Removes a handler that was previously registered with [method@Server.add_handler].
  *
@@ -452,9 +452,9 @@ jsonrpc_server_remove_handler (JsonrpcServer *self,
 
 /**
  * jsonrpc_server_foreach:
- * @self: a #JsonrpcServer
- * @foreach_func: (scope call): a callback for each client
- * @user_data: closure data for @foreach_func
+ * @self: A #JsonrpcServer
+ * @foreach_func: (scope call): A callback for each client
+ * @user_data: Closure data for @foreach_func
  *
  * Calls @foreach_func for every client connected.
  *
