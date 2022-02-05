@@ -84,7 +84,7 @@ if get_option('with_introspection')
           symbol_prefix: 'jsonrpc',
       identifier_prefix: 'Jsonrpc',
               link_with: libjsonrpc_glib,
-               includes: [ 'Gio-2.0', 'Json-1.0' ],
+               includes: ['GObject-2.0', 'GLib-2.0', 'Gio-2.0'],
                 install: true,
         install_dir_gir: girdir,
     install_dir_typelib: typelibdir,
