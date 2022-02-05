@@ -1,38 +1,46 @@
-subdir('xml')
+if get_option('enable_gtk_doc') and not get_option('with_introspection')
+  error('API reference requires introspection.')
+endif
 
-private_headers = [
-  'config.h',
-  'jsonrpc-glib.h',
-  'jsonrpc-version.h',
+toml_conf = configuration_data()
+toml_conf.set('version', meson.project_version())
+
+gidocgen = find_program('gi-docgen', required: get_option('enable_gtk_doc'))
+
+gidocgen_common_args = [
+  '--quiet',
+  '--no-namespace-dir',
 ]
 
-glib_prefix = dependency('glib-2.0').get_pkgconfig_variable('prefix')
-glib_docpath = join_paths(glib_prefix, 'share', 'gtk-doc', 'html')
-json_prefix = dependency('json-glib-1.0').get_pkgconfig_variable('prefix')
-json_docpath = join_paths(json_prefix, 'share', 'gtk-doc', 'html')
-docpath = join_paths(get_option('datadir'), 'gtk-doc', 'html')
+if get_option('werror')
+  gidocgen_common_args += ['--fatal-warnings']
+endif
 
-gnome.gtkdoc('jsonrpc-glib',
-           main_xml: 'jsonrpc-glib-docs.sgml',
-            src_dir: [
-              join_paths(meson.source_root(), 'src'),
-              join_paths(meson.build_root(), 'src'),
-            ],
+docs_dir = datadir / 'doc'
 
-       dependencies: libjsonrpc_glib_dep,
-  gobject_typesfile: 'jsonrpc-glib.types',
-          scan_args: [
-            '--rebuild-types',
-            '--ignore-decorators=_JSONRPC_EXTERN',
-            '--ignore-headers=' + ' '.join(private_headers),
-          ],
+if get_option('enable_gtk_doc')
+  source_toml = configure_file(
+    input: 'Jsonrpc.toml.in',
+    output: 'Jsonrpc.toml',
+    configuration: toml_conf,
+    install: true,
+    install_dir: docs_dir / 'jsonrpc-glib',
+  )
 
-       fixxref_args: [
-         '--html-dir=@0@'.format(docpath),
-         '--extra-dir=@0@'.format(join_paths(glib_docpath, 'glib')),
-         '--extra-dir=@0@'.format(join_paths(glib_docpath, 'gobject')),
-         '--extra-dir=@0@'.format(join_paths(glib_docpath, 'gio')),
-         '--extra-dir=@0@'.format(json_docpath),
-       ],
-            install: true)
-
+  custom_target('jsonrpc-glib-doc',
+    input: [ source_toml, libjsonrpc_glib_gir[0] ],
+    output: 'jsonrpc-glib',
+    command: [
+      gidocgen,
+      'generate',
+      gidocgen_common_args,
+      '--config=@INPUT0@',
+      '--output-dir=@OUTPUT@',
+      '--content-dir=@0@'.format(meson.current_source_dir()),
+      '@INPUT1@',
+    ],
+    build_by_default: true,
+    install: true,
+    install_dir: docs_dir,
+  )
+endif

@@ -28,6 +28,10 @@ libversion = '@0@.@1@.@2@'.format(soversion, current, revision)
 
 darwin_versions = [current + 1, '@0@.@1@'.format(current + 1, revision)]
 
+prefix = get_option('prefix')
+
+datadir = join_paths(prefix, get_option('datadir'))
+
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'libjsonrpc_glib')
 config_h.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
