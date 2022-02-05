@@ -511,7 +511,7 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
   /**
    * JsonrpcClient::handle-call:
    * @self: A #JsonrpcClient
-   * @method: the method name
+   * @method: The method name
    * @id: The "id" field of the JSONRPC message
    * @params: (nullable): The "params" field of the JSONRPC message
    *
@@ -548,8 +548,8 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
   /**
    * JsonrpcClient::notification:
    * @self: A #JsonrpcClient
-   * @method: the method name of the notification
-   * @params: (nullable): params for the notification
+   * @method: The method name of the notification
+   * @params: (nullable): Params for the notification
    *
    * This signal is emitted when a notification has been received from a
    * peer. Unlike [signal@Client::handle-call], this does not have an "id"
@@ -881,7 +881,7 @@ jsonrpc_client_call_sync_cb (GObject      *object,
 /**
  * jsonrpc_client_call:
  * @self: A #JsonrpcClient
- * @method: the name of the method to call
+ * @method: The name of the method to call
  * @params: (transfer none) (nullable): A [struct@GLib.Variant] of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
  * @return_value: (nullable) (out): A location for a [struct@GLib.Variant]
@@ -942,13 +942,13 @@ jsonrpc_client_call (JsonrpcClient  *self,
 /**
  * jsonrpc_client_call_with_id_async:
  * @self: A #JsonrpcClient
- * @method: the name of the method to call
+ * @method: The name of the method to call
  * @params: (transfer none) (nullable): A [struct@GLib.Variant] of parameters or %NULL
- * @id: (out) (transfer full) (optional): a location for a [struct@GLib.Variant]
+ * @id: (out) (transfer full) (optional): A location for a [struct@GLib.Variant]
  *   describing the identifier used for the method call, or %NULL.
  * @cancellable: (nullable): A #GCancellable or %NULL
- * @callback: a callback to executed upon completion
- * @user_data: user data for @callback
+ * @callback: Callback to executed upon completion
+ * @user_data: User data for @callback
  *
  * Asynchronously calls @method with @params on the remote peer.
  *
@@ -1040,7 +1040,7 @@ jsonrpc_client_call_with_id_async (JsonrpcClient       *self,
 /**
  * jsonrpc_client_call_async:
  * @self: A #JsonrpcClient
- * @method: the name of the method to call
+ * @method: The name of the method to call
  * @params: (transfer none) (nullable): A [struct@GLib.Variant] of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
  * @callback: a callback to executed upon completion
@@ -1129,7 +1129,7 @@ jsonrpc_client_send_notification_write_cb (GObject      *object,
 /**
  * jsonrpc_client_send_notification:
  * @self: A #JsonrpcClient
- * @method: the name of the method to call
+ * @method: The name of the method to call
  * @params: (transfer none) (nullable): A [struct@GLib.Variant] of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
  *
@@ -1181,7 +1181,7 @@ jsonrpc_client_send_notification (JsonrpcClient  *self,
 /**
  * jsonrpc_client_send_notification_async:
  * @self: A #JsonrpcClient
- * @method: the name of the method to call
+ * @method: The name of the method to call
  * @params: (transfer none) (nullable): A [struct@GLib.Variant] of parameters or %NULL
  * @cancellable: (nullable): A #GCancellable or %NULL
  *
@@ -1400,13 +1400,13 @@ jsonrpc_client_reply_error_cb (GObject      *object,
 
 /**
  * jsonrpc_client_reply_error_async:
- * @self: a #JsonrpcClient
- * @id: (transfer none): a [struct@GLib.Variant] containing the call id
- * @code: the error code
- * @message: (nullable): an optional error message
- * @cancellable: (nullable): a #GCancellable, or %NULL
- * @callback: (nullable): a #GAsyncReadyCallback or %NULL
- * @user_data: closure data for @callback
+ * @self: A #JsonrpcClient
+ * @id: (transfer none): A [struct@GLib.Variant] containing the call id
+ * @code: The error code
+ * @message: (nullable): An optional error message
+ * @cancellable: (nullable): A #GCancellable, or %NULL
+ * @callback: (nullable): A #GAsyncReadyCallback or %NULL
+ * @user_data: Closure data for @callback
  *
  * Asynchronously replies to the peer, sending a JSON-RPC error message.
  *
@@ -1481,11 +1481,11 @@ jsonrpc_client_reply_error_finish (JsonrpcClient  *self,
 
 /**
  * jsonrpc_client_reply:
- * @self: a #JsonrpcClient
- * @id: (transfer none) the id of the message to reply
- * @result: (transfer none) (nullable): the return value or %NULL
- * @cancellable: (nullable): a #GCancellable, or %NULL
- * @error: a #GError, or %NULL
+ * @self: A #JsonrpcClient
+ * @id: (transfer none): The id of the message to reply
+ * @result: (transfer none) (nullable): The return value or %NULL
+ * @cancellable: (nullable): A #GCancellable, or %NULL
+ * @error: A #GError, or %NULL
  *
  * Synchronous variant of [method@Client.reply_async].
  *
@@ -1547,12 +1547,12 @@ jsonrpc_client_reply_cb (GObject      *object,
 
 /**
  * jsonrcp_client_reply_async:
- * @self: a #JsonrpcClient
- * @id: (transfer none): the id of the message to reply
- * @result: (transfer none) (nullable): the return value or %NULL
- * @cancellable: a #GCancellable, or %NULL
- * @callback: (nullable): a #GAsyncReadyCallback or %NULL
- * @user_data: closure data for @callback
+ * @self: A #JsonrpcClient
+ * @id: (transfer none): The id of the message to reply
+ * @result: (transfer none) (nullable): The return value or %NULL
+ * @cancellable: A #GCancellable, or %NULL
+ * @callback: (nullable): A #GAsyncReadyCallback or %NULL
+ * @user_data: Closure data for @callback
  *
  * This function will reply to a method call identified by @id with the
  * result provided. If @result is %NULL, then a null JSON node is returned
@@ -1619,9 +1619,9 @@ jsonrpc_client_reply_async (JsonrpcClient       *self,
 
 /**
  * jsonrpc_client_reply_finish:
- * @self: a #JsonrpcClient
+ * @self: A #JsonrpcClient
  * @result: A #GAsyncResult
- * @error: a location for a #GError or %NULL
+ * @error: A location for a #GError or %NULL
  *
  * Completes an asynchronous request to [method@Client.reply_async].
  *
@@ -1642,7 +1642,7 @@ jsonrpc_client_reply_finish (JsonrpcClient  *self,
 
 /**
  * jsonrpc_client_start_listening:
- * @self: a #JsonrpcClient
+ * @self: A #JsonrpcClient
  *
  * This function requests that client start processing incoming
  * messages from the peer.
@@ -1681,7 +1681,7 @@ jsonrpc_client_start_listening (JsonrpcClient *self)
 
 /**
  * jsonrpc_client_get_use_gvariant:
- * @self: a #JsonrpcClient
+ * @self: A #JsonrpcClient
  *
  * Gets the [property@Client:use-gvariant] property.
  *
@@ -1703,8 +1703,8 @@ jsonrpc_client_get_use_gvariant (JsonrpcClient *self)
 
 /**
  * jsonrpc_client_set_use_gvariant:
- * @self: a #JsonrpcClient
- * @use_gvariant: if [struct@GLib.Variant] should be used
+ * @self: A #JsonrpcClient
+ * @use_gvariant: If [struct@GLib.Variant] should be used
  *
  * Sets the [property@Client:use-gvariant] property.
  *
