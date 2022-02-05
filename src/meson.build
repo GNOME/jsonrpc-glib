@@ -83,6 +83,7 @@ if get_option('with_introspection')
               namespace: 'Jsonrpc',
           symbol_prefix: 'jsonrpc',
       identifier_prefix: 'Jsonrpc',
+        export_packages: 'jsonrpc-glib-@0@'.format(apiversion),
               link_with: libjsonrpc_glib,
                includes: ['GObject-2.0', 'GLib-2.0', 'Gio-2.0'],
                 install: true,
