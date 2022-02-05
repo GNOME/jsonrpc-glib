@@ -511,8 +511,8 @@ jsonrpc_client_class_init (JsonrpcClientClass *klass)
   /**
    * JsonrpcClient::handle-call:
    * @self: A #JsonrpcClient
-   * @method: (not nullable): the method name
-   * @id: (not nullable): The "id" field of the JSONRPC message
+   * @method: the method name
+   * @id: The "id" field of the JSONRPC message
    * @params: (nullable): The "params" field of the JSONRPC message
    *
    * This signal is emitted when an RPC has been received from the peer we
@@ -586,7 +586,7 @@ jsonrpc_client_init (JsonrpcClient *self)
 
 /**
  * jsonrpc_client_new:
- * @io_stream: (not nullable): A [class@Gio.IOStream]
+ * @io_stream: A [class@Gio.IOStream]
  *
  * Creates a new #JsonrpcClient instance.
  *
@@ -1482,7 +1482,7 @@ jsonrpc_client_reply_error_finish (JsonrpcClient  *self,
 /**
  * jsonrpc_client_reply:
  * @self: a #JsonrpcClient
- * @id: (transfer none) (not nullable): the id of the message to reply
+ * @id: (transfer none) the id of the message to reply
  * @result: (transfer none) (nullable): the return value or %NULL
  * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: a #GError, or %NULL
