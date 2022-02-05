@@ -23,7 +23,7 @@ reference:
     - meson --prefix=${PWD}/pfx -Denable_gtk_doc=true _build
     - ninja -C _build install
     - mkdir -p _reference/
-    - mv pfx/share/doc/jsonrpc-glib/ _reference/
+    - mv pfx/share/doc/jsonrpc-glib/* _reference/
   artifacts:
     paths:
       - _reference
