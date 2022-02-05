@@ -1,0 +1,40 @@
+image: fedora:latest
+stages:
+  - test
+  - docs
+  - deploy
+
+build:
+  stage: test
+  script:
+    - sudo dnf install 'dnf-command(builddep)' -y
+    - sudo dnf builddep jsonrpc-glib-devel -y
+    - meson _build
+    - ninja -C _build 
+    - ninja -C _build test
+
+reference:
+  stage: docs
+  script:
+    - sudo dnf install 'dnf-command(builddep)' -y
+    - sudo dnf builddep jsonrpc-glib-devel -y
+    - sudo dnf install gi-docgen -y
+    - mkdir -p pfx/
+    - meson --prefix=${PWD}/pfx -Denable_gtk_doc=true _build
+    - ninja -C _build install
+    - mkdir -p _reference/
+    - mv pfx/share/doc/jsonrpc-glib/ _reference/
+  artifacts:
+    paths:
+      - _reference
+
+pages:
+  stage: deploy
+  needs: ['reference']
+  script:
+    - mv _reference public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
