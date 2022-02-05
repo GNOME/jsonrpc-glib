@@ -17,5 +17,4 @@ ninja install
 
 ## Documentation
 
-You can read the documentation online at https://people.gnome.org/~chergert/docs/jsonrpc-glib/
-
+Nightly documentations can be found at https://gnome.pages.gitlab.gnome.org/jsonrpc-glib/
