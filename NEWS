@@ -1,4 +1,11 @@
 ==============
+Version 3.42.0
+==============
+
+ • Documentation improvements to use gi-docgen
+ • Introspection fixes
+
+==============
 Version 3.41.0
 ==============
 
