@@ -81,7 +81,7 @@ server_handle_reply_cb (JsonrpcClient *client,
       /* Close might error, but the tasks are always
        * flushed and cancelled.
        */
-      g_idle_add_full (G_PRIORITY_LOW + 1000,
+      g_idle_add_full (G_PRIORITY_DEFAULT,
                        close_in_idle,
                        g_object_ref (client),
                        g_object_unref);
