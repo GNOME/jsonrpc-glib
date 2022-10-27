@@ -22,7 +22,7 @@
 
 /**
  * JsonrpcClient:
- * 
+ *
  * A client for JSON-RPC communication
  *
  * The #JsonrpcClient class provides a convenient API to coordinate with a
@@ -820,10 +820,22 @@ jsonrpc_client_call_read_cb (GObject      *object,
     {
       g_autoptr(GVariant) error_variant = NULL;
       g_autofree gchar *errstr = NULL;
+      const char *errmsg = NULL;
       gint64 id = -1;
+      gint64 errcode = -1;
 
       error_variant = g_variant_dict_lookup_value (dict, "error", NULL);
-      errstr = g_variant_print (error_variant, FALSE);
+
+      if (error_variant != NULL &&
+          g_variant_lookup (error_variant, "message", "&s", &errmsg) &&
+          g_variant_lookup (error_variant, "code", "x", &errcode))
+        errstr = g_strdup_printf ("%s (%d)", errmsg, (int)errcode);
+      else
+        errstr = g_variant_print (error_variant, FALSE);
+
+      /* TODO: We should probably create a JSONRPC_PEER_ERROR domain that allows
+       *       passing the code across directly here.
+       */
       error = g_error_new_literal (G_IO_ERROR, G_IO_ERROR_FAILED, errstr);
 
       if (g_variant_dict_lookup (dict, "id", "x", &id))
@@ -1134,7 +1146,7 @@ jsonrpc_client_send_notification_write_cb (GObject      *object,
  * @cancellable: (nullable): A #GCancellable or %NULL
  *
  * Synchronously calls @method with @params on the remote peer.
- * 
+ *
  * This function will not wait or expect a reply from the peer.
  *
  * If @params is floating then the reference is consumed.
@@ -1186,7 +1198,7 @@ jsonrpc_client_send_notification (JsonrpcClient  *self,
  * @cancellable: (nullable): A #GCancellable or %NULL
  *
  * Asynchronously calls @method with @params on the remote peer.
- * 
+ *
  * This function will not wait or expect a reply from the peer.
  *
  * This function is useful when the caller wants to be notified that
@@ -1271,8 +1283,8 @@ jsonrpc_client_send_notification_finish (JsonrpcClient  *self,
  * @self: A #JsonrpcClient
  *
  * Closes the underlying streams and cancels any inflight operations of the
- * #JsonrpcClient. 
- * 
+ * #JsonrpcClient.
+ *
  * This is important to call when you are done with the
  * client so that any outstanding operations that have caused @self to
  * hold additional references are cancelled.
