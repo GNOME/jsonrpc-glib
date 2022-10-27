@@ -833,10 +833,7 @@ jsonrpc_client_call_read_cb (GObject      *object,
       else
         errstr = g_variant_print (error_variant, FALSE);
 
-      /* TODO: We should probably create a JSONRPC_PEER_ERROR domain that allows
-       *       passing the code across directly here.
-       */
-      error = g_error_new_literal (G_IO_ERROR, G_IO_ERROR_FAILED, errstr);
+      error = g_error_new_literal (JSONRPC_CLIENT_ERROR, errcode, errstr);
 
       if (g_variant_dict_lookup (dict, "id", "x", &id))
         {
