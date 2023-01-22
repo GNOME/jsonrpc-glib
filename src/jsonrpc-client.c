@@ -240,7 +240,10 @@ error_invocations_from_idle (gpointer data)
 
   g_hash_table_iter_init (&iter, pd->invocations);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *)&task))
-    g_task_return_error (task, g_error_copy (pd->error));
+    {
+      if (!g_task_get_completed (task))
+        g_task_return_error (task, g_error_copy (pd->error));
+    }
 
   g_clear_pointer (&pd->invocations, g_hash_table_unref);
   g_clear_pointer (&pd->error, g_error_free);
