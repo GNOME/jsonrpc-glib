@@ -1032,7 +1032,8 @@ jsonrpc_client_call_with_id_async (JsonrpcClient       *self,
   g_variant_dict_insert (&dict, "id", "x", idval);
   g_variant_dict_insert (&dict, "method", "s", method);
   g_variant_dict_insert_value (&dict, "params", params);
-  message = g_variant_dict_end (&dict);
+
+  message = g_variant_take_ref (g_variant_dict_end (&dict));
 
   g_hash_table_insert (priv->invocations, GINT_TO_POINTER (idval), g_object_ref (task));
 
@@ -1183,7 +1184,8 @@ jsonrpc_client_send_notification (JsonrpcClient  *self,
   g_variant_dict_insert (&dict, "jsonrpc", "s", "2.0");
   g_variant_dict_insert (&dict, "method", "s", method);
   g_variant_dict_insert_value (&dict, "params", params);
-  message = g_variant_dict_end (&dict);
+
+  message = g_variant_take_ref (g_variant_dict_end (&dict));
 
   ret = jsonrpc_output_stream_write_message (priv->output_stream, message, cancellable, error);
 
@@ -1243,7 +1245,8 @@ jsonrpc_client_send_notification_async (JsonrpcClient       *self,
   g_variant_dict_insert (&dict, "jsonrpc", "s", "2.0");
   g_variant_dict_insert (&dict, "method", "s", method);
   g_variant_dict_insert_value (&dict, "params", params);
-  message = g_variant_dict_end (&dict);
+
+  message = g_variant_take_ref (g_variant_dict_end (&dict));
 
   jsonrpc_output_stream_write_message_async (priv->output_stream,
                                              message,
@@ -1531,7 +1534,8 @@ jsonrpc_client_reply (JsonrpcClient  *self,
   g_variant_dict_insert (&dict, "jsonrpc", "s", "2.0");
   g_variant_dict_insert_value (&dict, "id", id);
   g_variant_dict_insert_value (&dict, "result", result);
-  message = g_variant_dict_end (&dict);
+
+  message = g_variant_take_ref (g_variant_dict_end (&dict));
 
   ret = jsonrpc_output_stream_write_message (priv->output_stream, message, cancellable, error);
 
@@ -1620,7 +1624,8 @@ jsonrpc_client_reply_async (JsonrpcClient       *self,
   g_variant_dict_insert (&dict, "jsonrpc", "s", "2.0");
   g_variant_dict_insert_value (&dict, "id", id);
   g_variant_dict_insert_value (&dict, "result", result);
-  message = g_variant_dict_end (&dict);
+
+  message = g_variant_take_ref (g_variant_dict_end (&dict));
 
   jsonrpc_output_stream_write_message_async (priv->output_stream,
                                              message,
