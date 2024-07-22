@@ -35,7 +35,7 @@ test_basic (void)
   g_assert_cmpint (r, ==, 1);
 
   /* compare json gvariant encoding to ensure it matches */
-#define TESTSTR "{'foo': 'foo1', 'bar': 'foo2', 'baz': {'baz': [{'baz': 123}]}}"
+#define TESTSTR "{\"foo\": \"foo1\", \"bar\": \"foo2\", \"baz\": {\"baz\": [{\"baz\": 123}]}}"
   parser = json_parser_new ();
   r = json_parser_load_from_data (parser, TESTSTR, -1, &error);
   g_assert (r);
@@ -286,7 +286,7 @@ test_null_strv (void)
   g_assert_true (r);
   g_assert_null (get_ar);
 
-  node = json_from_string ("{'key': null}", &error);
+  node = json_from_string ("{\"key\": null}", &error);
   g_assert_no_error (error);
   g_assert_nonnull (node);
 
