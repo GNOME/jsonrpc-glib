@@ -1,4 +1,10 @@
 ==============
+Version 3.44.1
+==============
+
+Update testsuite to work with stricter json-glib.
+
+==============
 Version 3.44.0
 ==============
 
