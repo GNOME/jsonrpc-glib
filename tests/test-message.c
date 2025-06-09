@@ -21,7 +21,7 @@ test_basic (void)
     "}"
   );
 
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node,
     "foo", JSONRPC_MESSAGE_GET_STRING (&foo1),
@@ -38,12 +38,12 @@ test_basic (void)
 #define TESTSTR "{\"foo\": \"foo1\", \"bar\": \"foo2\", \"baz\": {\"baz\": [{\"baz\": 123}]}}"
   parser = json_parser_new ();
   r = json_parser_load_from_data (parser, TESTSTR, -1, &error);
-  g_assert (r);
+  g_assert_true (r);
   g_assert_no_error (error);
   deserialized = json_gvariant_deserialize (json_parser_get_root (parser), NULL, &error);
-  g_assert (deserialized);
+  g_assert_true (deserialized);
   g_assert_no_error (error);
-  g_assert (g_variant_equal (deserialized, node));
+  g_assert_true (g_variant_equal (deserialized, node));
 #undef TESTSTR
 }
 
@@ -56,7 +56,7 @@ test_deep_array (void)
   gboolean r;
 
   node = JSONRPC_MESSAGE_NEW ("foo", "[","[","[","[","[","[","[","[","[","[", "abc", "]", "]","]","]","]","]","]","]","]","]");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", "[","[","[","[","[","[","[","[","[","[", JSONRPC_MESSAGE_GET_STRING (&abc), "]", "]","]","]","]","]","]","]","]","]");
   g_assert_cmpstr (abc, ==, "abc");
@@ -65,7 +65,7 @@ test_deep_array (void)
   g_clear_pointer (&node, g_variant_unref);
 
   node = JSONRPC_MESSAGE_NEW ("foo", "[","[","[","[","[","[","[","[","[","{", "foo", "xyz", "}", "]","]","]","]","]","]","]","]","]");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", "[","[","[","[","[","[","[","[","[","{", "foo", JSONRPC_MESSAGE_GET_STRING (&xyz), "}", "]","]","]","]","]","]","]","]","]");
   g_assert_cmpstr (xyz, ==, "xyz");
@@ -81,10 +81,10 @@ test_extract_array (void)
   gint32 a=0, b=0, c=0;
 
   node = JSONRPC_MESSAGE_NEW ("foo", "[", JSONRPC_MESSAGE_PUT_INT32 (1), JSONRPC_MESSAGE_PUT_INT32 (2), JSONRPC_MESSAGE_PUT_INT32 (3), "]");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", JSONRPC_MESSAGE_GET_VARIANT (&ar123));
-  g_assert (ar123 != NULL);
+  g_assert_nonnull (ar123);
   g_assert_cmpint (r, ==, 1);
   g_assert_cmpint (3, ==, g_variant_n_children (ar123));
 
@@ -103,11 +103,11 @@ test_extract_object (void)
   gboolean r;
 
   node = JSONRPC_MESSAGE_NEW ("foo", "{", "bar", "[", JSONRPC_MESSAGE_PUT_INT32 (1), "two", JSONRPC_MESSAGE_PUT_INT32 (3), "]", "}");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", JSONRPC_MESSAGE_GET_DICT (&dict));
-  g_assert (dict != NULL);
-  g_assert (g_variant_dict_contains (dict, "bar"));
+  g_assert_nonnull (dict);
+  g_assert_true (g_variant_dict_contains (dict, "bar"));
   g_assert_cmpint (r, ==, TRUE);
 }
 
@@ -120,21 +120,22 @@ test_extract_node (void)
   gboolean r;
 
   node = JSONRPC_MESSAGE_NEW ("foo", "{", "bar", "[", JSONRPC_MESSAGE_PUT_INT32 (1), "two", JSONRPC_MESSAGE_PUT_INT32 (3), "]", "}");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", "{", "bar", JSONRPC_MESSAGE_GET_VARIANT (&ar), "}");
-  g_assert (ar != NULL);
+  g_assert_nonnull (ar);
   g_assert_cmpint (r, ==, TRUE);
   g_clear_pointer (&node, g_variant_unref);
   g_clear_pointer (&ar, g_variant_unref);
 
   node = jsonrpc_message_new ("foo", "{", "bar", "[", JSONRPC_MESSAGE_PUT_INT32 (1), "]", "}", NULL);
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
   g_clear_pointer (&node, g_variant_unref);
 
   node2 = JSONRPC_MESSAGE_NEW ("bar", JSONRPC_MESSAGE_PUT_INT32 (1));
-  node = JSONRPC_MESSAGE_NEW ("foo", "{", JSONRPC_MESSAGE_PUT_VARIANT (g_steal_pointer (&node2)), "}");
-  g_assert (node != NULL);
+  g_assert_nonnull (node2);
+  node = JSONRPC_MESSAGE_NEW ("foo", "{", JSONRPC_MESSAGE_PUT_VARIANT (node2), "}");
+  g_assert_nonnull (node);
   g_clear_pointer (&node, g_variant_unref);
   g_clear_pointer (&node2, g_variant_unref);
 }
@@ -148,7 +149,7 @@ test_paren (void)
   gboolean r;
 
   node = JSONRPC_MESSAGE_NEW ("foo", "{", "bar", "[", JSONRPC_MESSAGE_PUT_STRING (paren), "]", "}");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", "{", "bar", "[", JSONRPC_MESSAGE_GET_STRING (&str), "]", "}");
   g_assert_cmpstr (str, ==, "{");
@@ -165,11 +166,11 @@ test_array_toplevel (void)
   gboolean r;
 
   node = JSONRPC_MESSAGE_NEW ("foo", "[", "a", "b", "c", "d", "e", "]");
-  g_assert (node != NULL);
+  g_assert_nonnull (node);
 
   r = JSONRPC_MESSAGE_PARSE (node, "foo", JSONRPC_MESSAGE_GET_ITER (&iter));
   g_assert_cmpint (r, ==, TRUE);
-  g_assert (iter != NULL);
+  g_assert_nonnull (iter);
 
   r = JSONRPC_MESSAGE_PARSE_ARRAY (iter, JSONRPC_MESSAGE_GET_STRING (&a), JSONRPC_MESSAGE_GET_STRING (&b));
   g_assert_cmpint (r, ==, TRUE);
@@ -189,8 +190,8 @@ test_new_array (void)
   gboolean r;
 
   node = JSONRPC_MESSAGE_NEW_ARRAY ("a", "b", "c", "d", "e");
-  g_assert (node != NULL);
-  g_assert (g_variant_is_of_type (node, G_VARIANT_TYPE ("av")));
+  g_assert_nonnull (node);
+  g_assert_true (g_variant_is_of_type (node, G_VARIANT_TYPE ("av")));
 
   r = g_variant_iter_init (&iter, node);
   g_assert_true (r);
@@ -215,8 +216,8 @@ test_new_array_objs (void)
   g_autoptr(GVariant) node = NULL;
 
   node = JSONRPC_MESSAGE_NEW_ARRAY ("{","}", "{", "}");
-  g_assert (node != NULL);
-  g_assert (g_variant_is_of_type (node, G_VARIANT_TYPE ("av")));
+  g_assert_nonnull (node);
+  g_assert_true (g_variant_is_of_type (node, G_VARIANT_TYPE ("av")));
   g_assert_cmpint (g_variant_n_children (node), ==, 2);
 }
 
@@ -235,7 +236,7 @@ test_null_string (void)
     "content-type", JSONRPC_MESSAGE_PUT_STRING (NULL)
   );
 
-  g_assert (msg != NULL);
+  g_assert_nonnull (msg);
 
   success = JSONRPC_MESSAGE_PARSE (msg,
     "foo", JSONRPC_MESSAGE_GET_STRING (&foo),
