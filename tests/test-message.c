@@ -125,13 +125,18 @@ test_extract_node (void)
   r = JSONRPC_MESSAGE_PARSE (node, "foo", "{", "bar", JSONRPC_MESSAGE_GET_VARIANT (&ar), "}");
   g_assert (ar != NULL);
   g_assert_cmpint (r, ==, TRUE);
+  g_clear_pointer (&node, g_variant_unref);
+  g_clear_pointer (&ar, g_variant_unref);
 
   node = jsonrpc_message_new ("foo", "{", "bar", "[", JSONRPC_MESSAGE_PUT_INT32 (1), "]", "}", NULL);
   g_assert (node != NULL);
+  g_clear_pointer (&node, g_variant_unref);
 
   node2 = JSONRPC_MESSAGE_NEW ("bar", JSONRPC_MESSAGE_PUT_INT32 (1));
   node = JSONRPC_MESSAGE_NEW ("foo", "{", JSONRPC_MESSAGE_PUT_VARIANT (g_steal_pointer (&node2)), "}");
   g_assert (node != NULL);
+  g_clear_pointer (&node, g_variant_unref);
+  g_clear_pointer (&node2, g_variant_unref);
 }
 
 static void
