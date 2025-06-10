@@ -35,7 +35,7 @@
 #endif
 
 #define COMPARE_MAGIC(_any,_magic) \
-  (strncmp ((_any)->magic.bytes, \
+  (strncmp ((const char *)_any, \
             _JSONRPC_MESSAGE_##_magic##_MAGIC, \
             sizeof ((_any)->magic.bytes)) == 0)
 
