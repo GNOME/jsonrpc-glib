@@ -1,4 +1,10 @@
 ==============
+Version 3.44.2
+==============
+
+Improvements for potential UB usage for 8-byte aligned types
+
+==============
 Version 3.44.1
 ==============
 
