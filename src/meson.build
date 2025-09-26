@@ -75,6 +75,8 @@ libjsonrpc_glib_dep = declare_dependency(
   include_directories: include_directories('.'),
 )
 
+meson.override_dependency('jsonrpc-glib-@0@'.format(apiversion), libjsonrpc_glib_dep)
+
 if get_option('with_introspection')
 
   libjsonrpc_glib_gir = gnome.generate_gir(libjsonrpc_glib,
